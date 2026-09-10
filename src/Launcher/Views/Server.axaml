@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<UserControl x:Class="Launcher.Views.Server"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:m="using:Launcher.Models"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
+             xmlns:vm="using:Launcher.ViewModels"
+             d:DesignHeight="550"
+             d:DesignWidth="650"
+             x:DataType="vm:Server"
+             mc:Ignorable="d">
+
+  <Design.DataContext>
+    <vm:Server />
+  </Design.DataContext>
+
+  <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,*,50,Auto">
+
+    <!-- Title & Refresh Row -->
+    <Grid Grid.Row="0"
+          Margin="0,30,30,10"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          ColumnDefinitions="Auto,Auto">
+
+      <!-- Refresh Status -->
+      <Button Grid.Column="0"
+              VerticalAlignment="Center"
+              Classes="no_background"
+              Command="{Binding RefreshCommand}">
+        <Path Width="18"
+              Height="18"
+              Classes.rotating="{Binding RefreshCommand.IsRunning}"
+              Data="{StaticResource Icons.Loading}"
+              Stretch="Fill" />
+      </Button>
+
+      <!-- Title -->
+      <Border Grid.Column="1">
+        <TextBlock FontFamily="{StaticResource FontDefault}"
+                   FontSize="24"
+                   Text="{Binding Info.Name, Mode=OneWay}" />
+      </Border>
+    </Grid>
+
+    <!-- Server Status / Player Count -->
+    <Grid Grid.Row="1"
+          HorizontalAlignment="Center"
+          ColumnDefinitions="Auto,Auto">
+      <StackPanel Grid.Column="0"
+                  Margin="0,0,10,0"
+                  HorizontalAlignment="Center"
+                  Orientation="Horizontal"
+                  Spacing="2.5">
+        <TextBlock FontFamily="{StaticResource FontDefault}"
+                   FontSize="15"
+                   Text="{StaticResource Text.ServerStatus}" />
+        <TextBlock FontFamily="{StaticResource FontDefault}"
+                   FontSize="15"
+                   Foreground="{Binding ServerStatusFill}"
+                   Text="{Binding Status, Mode=TwoWay}" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="1"
+                  HorizontalAlignment="Center"
+                  Orientation="Horizontal">
+        <TextBlock FontFamily="{StaticResource FontDefault}"
+                   FontSize="15"
+                   Text="{StaticResource Text.OnlinePlayers}" />
+        <TextBlock Width="30"
+                   FontFamily="{StaticResource FontDefault}"
+                   FontSize="15"
+                   Text="{Binding OnlinePlayers, Mode=OneWay}" />
+      </StackPanel>
+    </Grid>
+
+    <!-- Server Description -->
+    <Border Grid.Row="2"
+            Margin="20"
+            BorderBrush="{StaticResource Color.Border}"
+            BorderThickness="1"
+            CornerRadius="5">
+      <Border Padding="15"
+              Background="{StaticResource Color.Description}"
+              CornerRadius="5"
+              Opacity="0.050">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" Opacity="100">
+          <md:MarkdownRenderer LinkCommand="{Binding OpenUriCommand}" MarkdownBuilder="{Binding MarkdownBuilder}" />
+        </ScrollViewer>
+      </Border>
+    </Border>
+
+    <!-- Server Play / Update Status -->
+    <StackPanel Grid.Row="3"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+      <Button Classes="no_background"
+              Command="{Binding PlayCommand}"
+              Cursor="Hand"
+              IsEnabled="{Binding IsEnabled}"
+              IsVisible="{Binding PlayCommand.IsRunning, Converter={x:Static BoolConverters.Not}}">
+        <Image Width="165"
+               Source="/Assets/fr_asset3.png"
+               Stretch="UniformToFill" />
+      </Button>
+      <TextBlock FontFamily="{StaticResource FontDefault}"
+                 FontSize="14"
+                 IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                 Text="{Binding StatusMessage, Mode=OneWay}" />
+    </StackPanel>
+
+    <!-- Client Folder -->
+    <StackPanel Grid.Row="4"
+                Margin="0,0,15,15"
+                HorizontalAlignment="Right">
+      <Button Classes="flat primary"
+              Command="{Binding OpenFolderCommand}"
+              CornerRadius="5"
+              ToolTip.Tip="{StaticResource Text.Server.ClientFolder.Tooltip}">
+        <Button.Background>
+          <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+            <GradientStop Offset="0.0" Color="#96B9D9" />
+            <GradientStop Offset="4.0" Color="#202959" />
+            <GradientStop Offset="0.8" Color="#37538C" />
+          </LinearGradientBrush>
+        </Button.Background>
+        <Path Width="16"
+              Height="16"
+              Data="{StaticResource Icons.Folder}"
+              Stretch="Fill" />
+      </Button>
+    </StackPanel>
+  </Grid>
+</UserControl>

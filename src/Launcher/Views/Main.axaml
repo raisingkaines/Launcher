@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Window x:Class="Launcher.Views.Main"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:Launcher.Controls"
+        xmlns:cv="using:Launcher.Converters"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:m="using:Launcher.Models"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:v="using:Launcher.Views"
+        xmlns:vm="using:Launcher.ViewModels"
+        Title="{StaticResource Text.Title}"
+        Width="800"
+        Height="550"
+        MinWidth="800"
+        MinHeight="550"
+        d:DesignHeight="550"
+        d:DesignWidth="800"
+        x:DataType="vm:Main"
+        CanResize="False"
+        Icon="/App.ico"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d">
+
+  <Design.DataContext>
+    <vm:Main />
+  </Design.DataContext>
+
+  <!-- Background -->
+  <Window.Background>
+    <ImageBrush Source="/Assets/background.png" />
+  </Window.Background>
+
+  <Grid ColumnDefinitions="200,*" RowDefinitions="*">
+
+    <!-- Left Panel -->
+    <DockPanel Background="{StaticResource Color.Server}">
+
+      <!-- Header -->
+      <TextBlock Margin="17"
+                 HorizontalAlignment="Center"
+                 DockPanel.Dock="Top"
+                 FontFamily="{StaticResource FontDefault}"
+                 FontSize="15"
+                 Text="{StaticResource Text.Servers}" />
+
+      <!-- Buttons -->
+      <StackPanel Margin="0,10,15,10"
+                  HorizontalAlignment="Center"
+                  DockPanel.Dock="Bottom"
+                  Orientation="Horizontal">
+
+        <!-- Settings -->
+        <Button Classes="no_background"
+                Command="{Binding ShowSettingsCommand}"
+                ToolTip.Tip="{StaticResource Text.Settings}">
+          <Path Width="16"
+                Height="16"
+                Data="{StaticResource Icons.Settings}"
+                Stretch="Fill" />
+        </Button>
+
+        <!-- Check for Updates -->
+        <Button Classes="no_background"
+                Command="{Binding CheckForUpdatesCommand}"
+                IsVisible="{Binding $parent[Window].((vm:Main)DataContext).ActiveServer, Converter={x:Static ObjectConverters.IsNull}}"
+                ToolTip.Tip="{StaticResource Text.Main.CheckingForUpdatesToolTip}">
+          <Path Width="16"
+                Height="16"
+                Classes.rotating="{Binding CheckForUpdatesCommand.IsRunning}"
+                Data="{StaticResource Icons.Loading}"
+                Stretch="Fill" />
+        </Button>
+
+        <!-- Add Server -->
+        <Button Classes="flat primary"
+                Command="{Binding AddServerCommand}"
+                FontFamily="{StaticResource FontDefault}">
+          <Button.Background>
+            <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+              <GradientStop Offset="0.0" Color="#96B9D9" />
+              <GradientStop Offset="4.0" Color="#202959" />
+              <GradientStop Offset="0.8" Color="#37538C" />
+            </LinearGradientBrush>
+          </Button.Background>
+          <Grid>
+            <TextBlock Margin="2,2,2,2"
+                       FontSize="14"
+                       Foreground="#202959"
+                       RenderTransformOrigin="0.0,0.0"
+                       Text="{StaticResource Text.Main.AddServer}">
+              <TextBlock.RenderTransform>
+                <TranslateTransform X="-2" Y="0" />
+              </TextBlock.RenderTransform>
+            </TextBlock>
+            <TextBlock FontSize="14" Text="{StaticResource Text.Main.AddServer}" />
+          </Grid>
+        </Button>
+      </StackPanel>
+
+      <!-- Server List -->
+      <ListBox Background="Transparent"
+               ItemsSource="{Binding Servers, Mode=TwoWay}"
+               SelectedItem="{Binding ActiveServer, Mode=TwoWay}"
+               SelectionMode="Toggle">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:Server">
+            <TextBlock HorizontalAlignment="Stretch"
+                       VerticalAlignment="Center"
+                       FontFamily="{StaticResource FontDefault}"
+                       FontSize="16"
+                       FontStyle="Oblique"
+                       Text="{Binding Info.Name, Mode=OneWay}"
+                       TextTrimming="CharacterEllipsis"
+                       TextWrapping="NoWrap" />
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+        <ListBox.Styles>
+          <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#8037538C" />
+          </Style>
+          <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Cursor" Value="Hand" />
+          </Style>
+        </ListBox.Styles>
+      </ListBox>
+    </DockPanel>
+
+    <!-- Divider -->
+    <Rectangle Grid.Column="0"
+               Width="1"
+               HorizontalAlignment="Right"
+               VerticalAlignment="Stretch"
+               Fill="{StaticResource Color.Border}"
+               Opacity="0.2" />
+
+    <!-- Right Panel -->
+    <StackPanel Grid.Column="1"
+                Margin="15,0,0,10"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom">
+
+      <!-- Log Button -->
+      <Button Classes="flat primary"
+              Command="{Binding OpenLogsCommand}"
+              FontFamily="{StaticResource FontDefault}"
+              IsVisible="{Binding $parent[Window].((vm:Main)DataContext).ActiveServer, Converter={x:Static ObjectConverters.IsNull}}">
+        <Button.Background>
+          <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+            <GradientStop Offset="0.0" Color="#96B9D9" />
+            <GradientStop Offset="4.0" Color="#202959" />
+            <GradientStop Offset="0.8" Color="#37538C" />
+          </LinearGradientBrush>
+        </Button.Background>
+        <TextBlock Text="{StaticResource Text.Logs}" />
+      </Button>
+
+      <!-- Delete Server Button -->
+      <Button Classes="flat primary"
+              Command="{Binding DeleteServerCommand}"
+              IsVisible="{Binding $parent[Window].((vm:Main)DataContext).ActiveServer, Converter={x:Static ObjectConverters.IsNotNull}}"
+              ToolTip.Tip="{StaticResource Text.Server.DeleteServer.Tooltip}">
+        <Button.Background>
+          <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+            <GradientStop Offset="0.0" Color="#96B9D9" />
+            <GradientStop Offset="4.0" Color="#202959" />
+            <GradientStop Offset="0.8" Color="#37538C" />
+          </LinearGradientBrush>
+        </Button.Background>
+        <Path Width="16"
+              Height="16"
+              Data="{StaticResource Icons.Delete}"
+              Stretch="Fill" />
+      </Button>
+    </StackPanel>
+
+    <!-- Message Display -->
+    <TextBlock Grid.Row="0"
+               Grid.Column="1"
+               Margin="25"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Bottom"
+               FontFamily="{StaticResource FontDefault}"
+               FontSize="13"
+               Text="{Binding Message, Mode=OneWay}" />
+
+    <!-- Version Label -->
+    <Label Grid.Row="0"
+           Grid.Column="1"
+           Margin="5"
+           HorizontalAlignment="Center"
+           VerticalAlignment="Bottom"
+           Content="{Binding Version, StringFormat='Version: {0}'}"
+           FontFamily="{StaticResource FontDefault}"
+           FontSize="13"
+           IsVisible="{Binding $parent[Window].((vm:Main)DataContext).ActiveServer, Converter={x:Static ObjectConverters.IsNull}}"
+           Opacity="0.5" />
+
+    <!-- Active Server View -->
+    <v:Server Grid.Row="0"
+              Grid.Column="1"
+              DataContext="{Binding ActiveServer, Mode=TwoWay}"
+              IsVisible="{Binding $parent[Window].((vm:Main)DataContext).ActiveServer, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+    <!-- Popups -->
+    <Grid Grid.Row="0"
+          Grid.ColumnSpan="2"
+          IsVisible="{Binding Popup, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+      <!-- Overlay -->
+      <Border Background="{StaticResource Color.Window}" Opacity="0.5" />
+
+      <!-- Popup Content -->
+      <Grid Width="500"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+        <ContentControl ClipToBounds="False"
+                        Content="{Binding Popup}"
+                        Opacity="0.9">
+          <ContentControl.DataTemplates>
+            <DataTemplate DataType="vm:Popup">
+              <Border Margin="8,0,8,8"
+                      Background="{StaticResource Color.Window}"
+                      BorderBrush="{StaticResource Color.Border}"
+                      BorderThickness="1"
+                      CornerRadius="10">
+                <StackPanel Margin="8" Orientation="Vertical">
+
+                  <!-- Main View -->
+                  <ContentPresenter Margin="0,8"
+                                    Content="{Binding View}"
+                                    IsHitTestVisible="{Binding InProgress, Converter={x:Static BoolConverters.Not}}" />
+
+                  <!-- Progress Indicator -->
+                  <StackPanel IsVisible="{Binding InProgress}" Orientation="Vertical">
+                    <Rectangle Height="1" HorizontalAlignment="Stretch" />
+                    <TextBlock HorizontalAlignment="Center"
+                               FontFamily="{StaticResource FontDefault}"
+                               FontStyle="Italic"
+                               Text="{Binding ProgressDescription, Mode=OneWay}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ContentControl.DataTemplates>
+        </ContentControl>
+      </Grid>
+    </Grid>
+
+    <!-- Notifications -->
+    <Grid Grid.Row="0"
+          Grid.ColumnSpan="2"
+          Width="400"
+          Margin="0,10,0,0"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Top">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding Notifications}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <VirtualizingStackPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="m:Notification">
+              <Grid Margin="0,15,0,0">
+                <Border Background="{StaticResource Color.Window}"
+                        BorderBrush="{StaticResource Color.Border}"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Opacity="0.9" />
+                <Grid Margin="10" RowDefinitions="20,Auto,15">
+
+                  <!-- Error Notification -->
+                  <StackPanel Grid.Row="0"
+                              HorizontalAlignment="Center"
+                              IsVisible="{Binding IsError}"
+                              Orientation="Horizontal">
+
+                    <Image HorizontalAlignment="Left"
+                           Source="/Assets/fr_asset2.png"
+                           Stretch="None" />
+
+                    <TextBlock Margin="5,0,0,0"
+                               FontFamily="{StaticResource FontDefault}"
+                               FontSize="15"
+                               Text="{StaticResource Text.Main.Error}" />
+                  </StackPanel>
+
+                  <!-- Info Notification -->
+                  <StackPanel Grid.Row="0"
+                              HorizontalAlignment="Center"
+                              IsVisible="{Binding IsError, Converter={x:Static BoolConverters.Not}}"
+                              Orientation="Horizontal">
+
+                    <Image HorizontalAlignment="Left"
+                           Source="/Assets/fr_asset2.png"
+                           Stretch="None" />
+
+                    <TextBlock Margin="5,0,0,0"
+                               FontFamily="{StaticResource FontDefault}"
+                               FontSize="15"
+                               Text="{StaticResource Text.Main.Info}" />
+                  </StackPanel>
+
+                  <!-- Message Text -->
+                  <TextBox Grid.Row="1"
+                           MaxHeight="200"
+                           Margin="8"
+                           Padding="3"
+                           VerticalContentAlignment="Top"
+                           Classes="no_background no_border"
+                           FontSize="13"
+                           IsReadOnly="True"
+                           ScrollViewer.VerticalScrollBarVisibility="Auto"
+                           Text="{Binding Message, Mode=OneWay}"
+                           TextWrapping="Wrap" />
+                </Grid>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</Window>

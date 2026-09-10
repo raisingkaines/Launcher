@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Design.PreviewWith>
+    <Border Padding="20">
+      <TextBlock Text="{DynamicResource Text.Ok}" />
+    </Border>
+  </Design.PreviewWith>
+
+  <!-- Common Actions -->
+  <x:String x:Key="Text.Ok" xml:space="preserve">Ok</x:String>
+  <x:String x:Key="Text.Yes" xml:space="preserve">Yes</x:String>
+  <x:String x:Key="Text.No" xml:space="preserve">No</x:String>
+  <x:String x:Key="Text.Cancel" xml:space="preserve">Cancel</x:String>
+  <x:String x:Key="Text.Add" xml:space="preserve">Add</x:String>
+
+  <!-- Main Window -->
+  <x:String x:Key="Text.Servers" xml:space="preserve">Server List</x:String>
+  <x:String x:Key="Text.Title" xml:space="preserve">FreeRealms Legacy Launcher</x:String>
+  <x:String x:Key="Text.Main.Relaunching" xml:space="preserve">Relaunching...</x:String>
+  <x:String x:Key="Text.Main.NoUpdatesFound" xml:space="preserve">No Updates Found! Launcher is up-to-date.</x:String>
+  <x:String x:Key="Text.Main.Downloading" xml:space="preserve">>Downloading Update {0}... ({1}%)</x:String>
+  <x:String x:Key="Text.Main.CheckingForUpdates" xml:space="preserve">Checking For Updates...</x:String>
+  <x:String x:Key="Text.Main.UpdateError" xml:space="preserve">Error checking for updates.</x:String>
+  <x:String x:Key="Text.Main.CheckingForUpdatesToolTip" xml:space="preserve">Check For Updates</x:String>
+  <x:String x:Key="Text.Main.Error" xml:space="preserve">Oops :( We hit a roadblock...</x:String>
+  <x:String x:Key="Text.Main.AddServer" xml:space="preserve">Add Server</x:String>
+
+  <!-- Server Window -->
+  <x:String x:Key="Text.Server.ClientFolder.Tooltip" xml:space="preserve">Open Client Directory</x:String>
+  <x:String x:Key="Text.Server.DeleteServer.Tooltip" xml:space="preserve">Delete Server</x:String>
+
+  <!-- Login -->
+  <x:String x:Key="Text.Login" xml:space="preserve">Login</x:String>
+  <x:String x:Key="Text.Login.Username" xml:space="preserve">Username:</x:String>
+  <x:String x:Key="Text.Login.Password" xml:space="preserve">Password:</x:String>
+  <x:String x:Key="Text.Login.Unauthorized" xml:space="preserve">Incorrect username or password.</x:String>
+  <x:String x:Key="Text.Login.RememberUsername" xml:space="preserve">Remember Username</x:String>
+  <x:String x:Key="Text.Login.RememberPassword" xml:space="preserve">Remember Password</x:String>
+  <x:String x:Key="Text.Login.Loading" xml:space="preserve">Logging In...</x:String>
+
+  <!-- Register -->
+  <x:String x:Key="Text.Register" xml:space="preserve">Register</x:String>
+  <x:String x:Key="Text.Register.Username" xml:space="preserve">Username:</x:String>
+  <x:String x:Key="Text.Register.Password" xml:space="preserve">Password:</x:String>
+  <x:String x:Key="Text.Register.ConfirmPassword" xml:space="preserve">Confirm Password:</x:String>
+  <x:String x:Key="Text.Register.ConfirmPassword.Error" xml:space="preserve">Passwords do not match.</x:String>
+  <x:String x:Key="Text.Register.Success" xml:space="preserve">Registration complete! You can now log in.</x:String>
+  <x:String x:Key="Text.Register.Conflict" xml:space="preserve">This username is already taken. Please choose a different one.</x:String>
+  <x:String x:Key="Text.Register.Loading" xml:space="preserve">Registering your account...</x:String>
+
+  <!-- Server Operations -->
+  <x:String x:Key="Text.Server.SecureApiWarning" xml:space="preserve">This server does not use HTTPS. Proceed at your own risk.</x:String>
+  <x:String x:Key="Text.Server.PreparingGameFiles" xml:space="preserve">Preparing Game Files: ({0}/{1})</x:String>
+  <x:String x:Key="Text.Server.VerifyClientFiles" xml:space="preserve">Verifying Client Files...</x:String>
+  <x:String x:Key="Text.ServerStatus" xml:space="preserve">Server Status: </x:String>
+  <x:String x:Key="Text.ServerStatus.Online" xml:space="preserve">Online</x:String>
+  <x:String x:Key="Text.ServerStatus.Locked" xml:space="preserve">Locked</x:String>
+  <x:String x:Key="Text.ServerStatus.Offline" xml:space="preserve">Offline</x:String>
+  <x:String x:Key="Text.ServerStatus.Outdated" xml:space="preserve">Outdated</x:String>
+  <x:String x:Key="Text.ServerStatus.Refreshing" xml:space="preserve">Refreshing</x:String>
+  <x:String x:Key="Text.OnlinePlayers" xml:space="preserve">Player Count: </x:String>
+
+  <!-- Add Server -->
+  <x:String x:Key="Text.Add_Server.ServerUrl" xml:space="preserve">Server URL:</x:String>
+  <x:String x:Key="Text.Add_Server.Loading" xml:space="preserve">Adding Server...</x:String>
+  <x:String x:Key="Text.Add_Server.InvalidServerUrl1" xml:space="preserve">Invalid url format. {0}</x:String>
+  <x:String x:Key="Text.Add_Server.InvalidServerUrl2" xml:space="preserve">Invalid url, only HTTP/HTTPS is supported. {0}</x:String>
+
+  <!-- Delete Server -->
+  <x:String x:Key="Text.Delete_Server" xml:space="preserve">Delete Server</x:String>
+  <x:String x:Key="Text.Delete_Server.Loading" xml:space="preserve">Deleting Server...</x:String>
+  <x:String x:Key="Text.Delete_Server.Confirm" xml:space="preserve">Are you sure you want to delete the server? This cannot be undone.</x:String>
+
+  <!-- Downloading / Closing -->
+  <x:String x:Key="Text.Downloading.OnClose" xml:space="preserve">Cannot close the launcher while downloading.</x:String>
+
+  <!-- Settings -->
+  <x:String x:Key="Text.Settings" xml:space="preserve">Settings</x:String>
+  <x:String x:Key="Text.Settings.General.Locale" xml:space="preserve">Game Language: </x:String>
+  <x:String x:Key="Text.Settings.General.Locale.Tooltip" xml:space="preserve">Select your language choice for the game.</x:String>
+  <x:String x:Key="Text.Settings.General.DiscordActivity" xml:space="preserve">Discord Activity</x:String>
+  <x:String x:Key="Text.Settings.General.DiscordActivity.Tooltip" xml:space="preserve">Enables the Discord Rich Presence (RPC) integration.</x:String>
+  <x:String x:Key="Text.Settings.General.ParallelDownload" xml:space="preserve">Parallel Download</x:String>
+  <x:String x:Key="Text.Settings.General.ParallelDownloads" xml:space="preserve">Parallel Downloads: </x:String>
+  <x:String x:Key="Text.Settings.General.ParallelDownload.Tooltip" xml:space="preserve">Enables / Disables parallel downloading. Hover over "parallel downloads" for more information. If parallel downloading isn't working as intended, consider disabling this option.</x:String>
+  <x:String x:Key="Text.Settings.General.ParallelDownloads.Tooltip" xml:space="preserve">Number of parallel downloads. Higher values are faster on faster connections/SSDs but are more resource-intensive. (2–10). Recommended: 4. Use what is best for your hardware.</x:String>
+
+  <!-- Discord -->
+  <x:String x:Key="Text.Discord.Playing" xml:space="preserve">Playing on Server(s): </x:String>
+  <x:String x:Key="Text.Discord.Idle" xml:space="preserve">Idling in the FreeRealms Legacy Launcher</x:String>
+
+  <!-- Logs -->
+  <x:String x:Key="Text.Logs" xml:space="preserve">Open Logs</x:String>
+
+</ResourceDictionary>

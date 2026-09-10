@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Design.PreviewWith>
+    <Border Padding="20">
+      <Button Classes="flat primary">Test</Button>
+    </Border>
+  </Design.PreviewWith>
+
+  <!-- Path Styles -->
+  <Style Selector="Path">
+    <Setter Property="Fill" Value="{StaticResource Color.FG1}" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Path[IsVisible=True].rotating">
+    <Style.Animations>
+      <Animation IterationCount="Infinite" Duration="0:0:1">
+        <KeyFrame Cue="0%">
+          <Setter Property="RotateTransform.Angle" Value="0.0" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="RotateTransform.Angle" Value="360.0" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- TextBlock Styles -->
+  <Style Selector="TextBlock">
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="Foreground" Value="{StaticResource Color.FG1}" />
+  </Style>
+
+  <!-- TextBox Styles -->
+  <Style Selector="TextBox">
+    <Setter Property="Padding" Value="4,0" />
+    <Setter Property="MinHeight" Value="16" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox:empty /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="#991D6BFF" />
+  </Style>
+  <Style Selector="TextBox:disabled /template/ Border#PART_BorderElement">
+    <Setter Property="Opacity" Value=".6" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox.no_background">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox.no_background:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox.no_background:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox.no_border">
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox.no_border:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox.no_border:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBox:error /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="#F23F43" />
+  </Style>
+
+  <!-- DataValidationErrors Styles -->
+  <Style Selector="DataValidationErrors">
+    <Setter Property="Theme" Value="{DynamicResource CustomDataValidationErrors}" />
+  </Style>
+
+  <!-- Button Styles -->
+  <Style Selector="Button.flat.primary">
+    <Setter Property="Background" Value="{StaticResource Color.FlatButton.PrimaryBackground}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Color.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button.flat.primary:pointerover /template/ Border#PART_Border">
+    <Setter Property="Background" Value="{StaticResource Color.FlatButton.PrimaryBackgroundHovered}" />
+  </Style>
+  <Style Selector="Button.flat.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource Color.FlatButton.PrimaryBackgroundHovered}" />
+  </Style>
+  <Style Selector="Button.no_background">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.no_background:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.no_background:pointerover /template/ Border#PART_Border">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.no_background:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+</Styles>

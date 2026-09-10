@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ApplicationIcon>App.ico</ApplicationIcon>
+    <TieredPGO>true</TieredPGO>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DefineConstants>$(DefineConstants);DESIGNMODE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="App.ico" />
+    <EmbeddedResource Include="Models\*.xsd" />
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Bogus" Version="35.6.5" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="HashDepot" Version="3.2.0" />
+    <PackageReference Include="LiveMarkdown.Avalonia" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.9" />
+    <PackageReference Include="NaturalSort.Extension" Version="4.4.1" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
+    <PackageReference Include="Downloader" Version="5.8.0" />
+    <PackageReference Include="NLog" Version="6.1.3" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.1.3" />
+    <PackageReference Include="Avalonia" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.2" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Discord\Discord.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="App.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

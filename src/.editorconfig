@@ -1,0 +1,29 @@
+# editorconfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+indent_size = 4
+indent_style = space
+
+# C# files
+[*.cs]
+
+# Namespace
+csharp_style_namespace_declarations = file_scoped:warning
+
+# Code style defaults
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Xaml files
+[*.{xaml,axaml}]
+indent_size = 2
+
+# Xml project files
+[*.csproj]
+indent_size = 2
+
+[*.json]
+indent_size = 2

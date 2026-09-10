@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Discord/Discord.csproj" />
+  <Project Path="Launcher/Launcher.csproj" />
+</Solution>

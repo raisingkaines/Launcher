@@ -1,0 +1,29 @@
+<Application x:Class="Launcher.App"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Launcher"
+             RequestedThemeVariant="Dark">
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <!-- Merged Resource Dictionaries -->
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="/Resources/Icons.axaml" />
+        <ResourceInclude Source="/Resources/Colors.axaml" />
+        <ResourceInclude Source="/Resources/Texts.axaml" />
+        <ResourceInclude Source="/Resources/Theme.axaml" />
+        <ResourceInclude Source="avares://LiveMarkdown.Avalonia/Defaults.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+
+      <!-- Additional Resources -->
+      <FontFamily x:Key="FontDefault">/Assets/Fonts/Maiandra-GD-Regular.otf#Maiandra GD</FontFamily>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="/Resources/Styles.axaml" />
+    <StyleInclude Source="avares://LiveMarkdown.Avalonia/Styles.axaml" />
+  </Application.Styles>
+
+</Application>
