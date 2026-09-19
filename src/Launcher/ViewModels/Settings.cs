@@ -44,6 +44,10 @@ public partial class Settings : ObservableObject
     [ObservableProperty]
     private string? installPath;
 
+    /// <summary>Whether the launcher music stays quiet. Off by default: it plays.</summary>
+    [ObservableProperty]
+    private bool musicMuted;
+
     [ObservableProperty]
     private AvaloniaList<ServerInfo> serverInfoList = [];
 
@@ -61,6 +65,7 @@ public partial class Settings : ObservableObject
 
     public event EventHandler? LocaleChanged;
     public event EventHandler? DiscordActivityChanged;
+    public event EventHandler? MusicMutedChanged;
 
     private Settings() { }
 
@@ -231,6 +236,16 @@ public partial class Settings : ObservableObject
 
             return false;
         }
+    }
+
+    partial void OnMusicMutedChanged(bool value)
+    {
+        if (value)
+            MusicService.Stop();
+        else
+            MusicService.Start();
+
+        MusicMutedChanged?.Invoke(this, EventArgs.Empty);
     }
 
     partial void OnLocaleChanged(LocaleType value)

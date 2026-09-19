@@ -27,6 +27,11 @@
 
       <StackPanel Margin="14,10" Orientation="Vertical" Spacing="10">
 
+        <!-- Launcher Music Checkbox -->
+        <CheckBox Content="{StaticResource Text.Settings.General.MusicMuted}"
+                  IsChecked="{Binding MusicMuted, Mode=TwoWay}"
+                  ToolTip.Tip="{StaticResource Text.Settings.General.MusicMuted.Tooltip}" />
+
         <!-- Discord Activity Checkbox -->
         <CheckBox Content="{StaticResource Text.Settings.General.DiscordActivity}"
                   IsChecked="{Binding DiscordActivity, Mode=TwoWay}"

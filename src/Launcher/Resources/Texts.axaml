@@ -87,6 +87,8 @@
   <x:String x:Key="Text.Settings.General.ParallelDownloads.Tooltip" xml:space="preserve">Number of parallel downloads. Higher values are faster on faster connections/SSDs but are more resource-intensive. Maximum recommended is your CPU core count; the default is half that.</x:String>
 
   <!-- Discord -->
+  <x:String x:Key="Text.Settings.General.MusicMuted" xml:space="preserve">Mute launcher music</x:String>
+  <x:String x:Key="Text.Settings.General.MusicMuted.Tooltip" xml:space="preserve">Stops the music that plays quietly while the launcher is open.</x:String>
   <x:String x:Key="Text.Discord.Playing" xml:space="preserve">Playing on</x:String>
   <x:String x:Key="Text.Discord.Idle" xml:space="preserve">In the launcher</x:String>
   <x:String x:Key="Text.Discord.Idle.State" xml:space="preserve">Choosing a server</x:String>

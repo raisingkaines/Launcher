@@ -230,6 +230,23 @@ public partial class Main : Window
     private void OnToggleFullScreen(object? sender, RoutedEventArgs e) => ToggleFullScreen();
 
     /// <summary>
+    /// What the window actually ended up as, rather than what was asked for. The
+    /// transparency hint in particular is a request: the platform reports back through
+    /// ActualTransparencyLevel whether it honoured it.
+    /// </summary>
+    private void LogWindowState(string when)
+    {
+        _logger.Info(
+            "window[{When}] state={State} askedTransparency={Asked} actualTransparency={Actual} " +
+            "windowBg={WindowBg} chromeBg={ChromeBg} chromeMargin={Margin} bounds={W}x{H}",
+            when, WindowState,
+            string.Join(",", TransparencyLevelHint), ActualTransparencyLevel,
+            Background, WindowChrome.Background, WindowChrome.Margin,
+            Bounds.Width, Bounds.Height);
+    }
+
+
+    /// <summary>
     /// Scales what is below the title bar. The bar itself keeps its own size: it is
     /// chrome, and scaling it just made a chunky strip across the screen. Windowed it is left alone at 1:1, and that
     /// pass is also where the design size is learned; full screen it is pinned to that
