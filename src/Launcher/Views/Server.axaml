@@ -20,9 +20,10 @@
 
     <!-- Server News, hidden until asked for -->
     <Border Grid.Row="0"
-            MaxHeight="230"
-            Margin="56,6,56,10"
-            VerticalAlignment="Top"
+            MinHeight="130"
+            MaxHeight="250"
+            Margin="56,6,56,12"
+            VerticalAlignment="Stretch"
             Background="{StaticResource Color.Card}"
             BorderBrush="{StaticResource Color.Border}"
             BorderThickness="1"
@@ -137,18 +138,25 @@
 
           <!-- Play -->
           <Button Grid.Column="1"
-                  MinWidth="150"
                   VerticalAlignment="Center"
-                  Classes="play"
+                  Classes="playimg"
                   Command="{Binding PlayCommand}"
-                  Content="{StaticResource Text.Main.Play}"
                   Cursor="Hand"
                   IsEnabled="{Binding IsEnabled}"
-                  IsVisible="{Binding PlayCommand.IsRunning, Converter={x:Static BoolConverters.Not}}" />
+                  IsVisible="{Binding PlayCommand.IsRunning, Converter={x:Static BoolConverters.Not}}">
+            <Panel>
+              <Image Width="166" Source="/Assets/play.png" Stretch="Uniform" />
+              <Image Width="166"
+                     Classes="hover"
+                     Opacity="0"
+                     Source="/Assets/play_hover.png"
+                     Stretch="Uniform" />
+            </Panel>
+          </Button>
 
           <Border Grid.Column="1"
-                  MinWidth="150"
-                  Height="44"
+                  MinWidth="166"
+                  Height="50"
                   IsVisible="{Binding PlayCommand.IsRunning}">
             <Path Width="24"
                   Height="24"

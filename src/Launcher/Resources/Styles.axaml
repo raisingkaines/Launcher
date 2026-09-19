@@ -175,54 +175,35 @@
     <Setter Property="Background" Value="#22FFFFFF" />
   </Style>
 
-  <!-- The green Play button -->
-  <Style Selector="Button.play">
-    <Setter Property="Height" Value="46" />
-    <Setter Property="Padding" Value="26,0" />
+  <!-- Play button: the original Play Now artwork, with its own hover state -->
+  <Style Selector="Button.playimg">
+    <Setter Property="Padding" Value="0" />
     <Setter Property="CornerRadius" Value="8" />
     <Setter Property="Cursor" Value="Hand" />
-    <Setter Property="FontFamily" Value="{StaticResource FontDefault}" />
-    <Setter Property="FontSize" Value="24" />
-    <Setter Property="FontWeight" Value="Bold" />
-    <Setter Property="Foreground" Value="White" />
-    <Setter Property="BorderBrush" Value="#1F4D14" />
-    <Setter Property="BorderThickness" Value="2" />
-    <Setter Property="HorizontalContentAlignment" Value="Center" />
-    <Setter Property="VerticalContentAlignment" Value="Center" />
-    <Setter Property="Background">
-      <Setter.Value>
-        <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
-          <GradientStop Offset="0.0" Color="#A8E063" />
-          <GradientStop Offset="0.45" Color="#6FC02F" />
-          <GradientStop Offset="1.0" Color="#3E8B1E" />
-        </LinearGradientBrush>
-      </Setter.Value>
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.playimg /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.playimg:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.playimg Image.hover">
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+      </Transitions>
     </Setter>
   </Style>
-  <Style Selector="Button.play /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="CornerRadius" Value="8" />
-    <Setter Property="Background">
-      <Setter.Value>
-        <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
-          <GradientStop Offset="0.0" Color="#A8E063" />
-          <GradientStop Offset="0.45" Color="#6FC02F" />
-          <GradientStop Offset="1.0" Color="#3E8B1E" />
-        </LinearGradientBrush>
-      </Setter.Value>
-    </Setter>
+  <Style Selector="Button.playimg:pointerover Image.hover">
+    <Setter Property="Opacity" Value="1" />
   </Style>
-  <Style Selector="Button.play:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background">
-      <Setter.Value>
-        <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
-          <GradientStop Offset="0.0" Color="#BDEE7C" />
-          <GradientStop Offset="0.45" Color="#7FD23C" />
-          <GradientStop Offset="1.0" Color="#4A9E26" />
-        </LinearGradientBrush>
-      </Setter.Value>
-    </Setter>
+  <Style Selector="Button.playimg:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.97)" />
   </Style>
-  <Style Selector="Button.play:disabled">
-    <Setter Property="Opacity" Value="0.5" />
+  <Style Selector="Button.playimg:disabled">
+    <Setter Property="Opacity" Value="0.45" />
   </Style>
 </Styles>
