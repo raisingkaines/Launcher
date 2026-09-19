@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
@@ -27,6 +28,15 @@ public partial class Main : Window
     private readonly double _normalWidth;
 
     private readonly double _normalHeight;
+
+    /// <summary>
+    /// What the interface measures at windowed, which is the size it was designed for.
+    /// Full screen scales that up rather than re-laying anything out, so the proportions
+    /// stay exactly as drawn.
+    /// </summary>
+    private double _designWidth;
+
+    private double _designHeight;
 
     public Main()
     {
@@ -176,6 +186,7 @@ public partial class Main : Window
             Width = _normalWidth;
             Height = _normalHeight;
             CanResize = false;
+            ApplyUiScale();
 
             return;
         }
@@ -187,9 +198,50 @@ public partial class Main : Window
         TransparencyLevelHint = [WindowTransparencyLevel.None];
 
         WindowState = WindowState.FullScreen;
+        ApplyUiScale();
     }
 
     private void OnToggleFullScreen(object? sender, RoutedEventArgs e) => ToggleFullScreen();
+
+    /// <summary>
+    /// Scales the interface to the window. Windowed it is left alone at 1:1, and that
+    /// pass is also where the design size is learned; full screen it is pinned to that
+    /// size and scaled up by whichever of width or height runs out first, so nothing is
+    /// ever cropped.
+    /// </summary>
+    private void ApplyUiScale()
+    {
+        if (WindowState != WindowState.FullScreen)
+        {
+            ContentRoot.Width = double.NaN;
+            ContentRoot.Height = double.NaN;
+            UiScaler.LayoutTransform = null;
+
+            // Bounds still hold the windowed layout here, which is what to scale from.
+            if (ContentRoot.Bounds.Width > 0 && ContentRoot.Bounds.Height > 0)
+            {
+                _designWidth = ContentRoot.Bounds.Width;
+                _designHeight = ContentRoot.Bounds.Height;
+            }
+
+            return;
+        }
+
+        // Never measured windowed, so there is nothing to scale from yet.
+        if (_designWidth <= 0 || _designHeight <= 0)
+            return;
+
+        ContentRoot.Width = _designWidth;
+        ContentRoot.Height = _designHeight;
+
+        var scale = Math.Min(Bounds.Width / _designWidth, Bounds.Height / _designHeight);
+
+        // Only ever bigger: the window cannot go below the design size anyway.
+        scale = Math.Max(1, scale);
+
+        UiScaler.LayoutTransform = new ScaleTransform(scale, scale);
+    }
+
 
     // Goes through Close() so the "still downloading" guard in OnClosing still applies.
     private void OnClose(object? sender, RoutedEventArgs e)
