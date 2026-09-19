@@ -23,6 +23,24 @@
         WindowStartupLocation="CenterScreen"
         mc:Ignorable="d">
 
+  <Window.Styles>
+    <!-- The rail opens only while the pointer is within its own bounds. -->
+    <Style Selector="Border.serverRail">
+      <Setter Property="Width" Value="222" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Width" Duration="0:0:0.16" Easing="CubicEaseOut" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <Style Selector="Border.serverRail:pointerover">
+      <Setter Property="Width" Value="330" />
+      <!-- Reads as floating over the artwork rather than pushing it aside. -->
+      <Setter Property="BoxShadow" Value="6 0 18 0 #66000000" />
+    </Style>
+  </Window.Styles>
+
   <Design.DataContext>
     <vm:Main />
   </Design.DataContext>
@@ -87,8 +105,17 @@
           </Border.Background>
         </Border>
 
-        <!-- Server Rail -->
-        <DockPanel Grid.Column="0" Background="{StaticResource Color.Server}">
+        <!-- Server Rail.
+             The column stays 222 wide so the card beside it never moves, while the rail
+             itself spans both columns and widens over the artwork whenever the pointer is
+             inside it. The names are what needed the room: at 222 they truncate. -->
+        <Border Grid.Column="0"
+                Grid.ColumnSpan="2"
+                HorizontalAlignment="Left"
+                Background="{StaticResource Color.Server}"
+                ClipToBounds="True"
+                Classes="serverRail">
+          <DockPanel>
 
           <TextBlock Margin="16,12,16,8"
                      DockPanel.Dock="Top"
@@ -248,7 +275,8 @@
               </Style>
             </ListBox.Styles>
           </ListBox>
-        </DockPanel>
+          </DockPanel>
+        </Border>
 
         <!-- Hero -->
         <Grid Grid.Column="1" RowDefinitions="Auto,*">
