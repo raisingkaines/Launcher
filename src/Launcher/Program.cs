@@ -31,9 +31,6 @@ internal sealed class Program
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-        if (!Settings.Instance.MusicMuted)
-            MusicService.Start();
-
         if (Settings.Instance.DiscordActivity)
         {
             DiscordService.Start();

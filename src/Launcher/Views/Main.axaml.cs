@@ -67,6 +67,11 @@ public partial class Main : Window
         ViewModel.OnLoad();
 
         StartBackdropRotation();
+
+        // Not in Program: the track is an Avalonia asset, and AssetLoader needs the
+        // runtime up, which it is not until the app has started.
+        if (!ViewModels.Settings.Instance.MusicMuted)
+            Services.MusicService.Start();
     }
 
     protected override void OnClosed(EventArgs e)
