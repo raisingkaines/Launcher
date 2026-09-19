@@ -185,6 +185,53 @@ characters: the player lands in character creation.
 > line the client *builds* to launch the TCG module, alongside `--post-login=tutorial` and
 > `FreeRealmsTCG.dll`. It is a red herring.
 
+## Compatibility: a server that implements none of this
+
+Every part of this is optional, and a server that implements none of it must be no worse off
+than before the feature existed. The rules the launcher follows:
+
+**Nothing here can stop someone playing.** Every failure - a 404, a redirect to a login page,
+a timeout, malformed JSON, a refused ticket, a dead network - ends in the ordinary launch with
+the server's own arguments, which is exactly what happened before character select existed.
+
+**Support is probed, never assumed.** A 200 is not enough, because servers commonly answer
+unknown paths with a catch-all. The reply must be `application/json`. Checked against real
+servers that do not implement it:
+
+| Server | `GET /characters` | Read as |
+| --- | --- | --- |
+| Server 2 sidecar | `404 text/plain` | unsupported |
+| asset host | `404 text/plain` | unsupported |
+| the website | `302` to an HTML page | unsupported |
+
+**An unsupported server is cheap.** The probe has its own 5 second timeout, well under the
+client's, so a server that never answers costs five seconds once rather than stalling the
+login. A definite "no" - a 404/405, or a reply that is not JSON - is remembered for the rest
+of the session, so it is asked once and never again.
+
+A timeout or a network error is deliberately **not** remembered. A blip must not turn the
+feature off until the launcher restarts, because the server may be perfectly fine on the next
+attempt.
+
+**The same rule applies to every endpoint, separately.** A server can implement `/characters`
+without `/characters/launch`, `/characters/create` or the portrait upload. Each is probed on
+its own terms and each falls back on its own:
+
+| Missing | What happens |
+| --- | --- |
+| `GET /characters` | the in-game select screen, as before |
+| `POST /characters/launch` | launches normally, the player picks in game |
+| `POST /characters/create` | launches normally, lands on the in-game select screen |
+| `POST /characters/:guid/portrait` | no portrait; nothing else is affected |
+
+**An acknowledgement has to mean something.** The portrait upload requires a JSON `{"ok":true}`
+before it records the file as sent. A catch-all answering 200 would otherwise look like success
+and the portrait would never be retried.
+
+**Portraits never block a login.** The upload runs in the background off the character list, so
+the player is never waiting on it, and it stops after the first refusal rather than working
+down the whole list against a server that will not take any of them.
+
 ## Implementing it on a server
 
 1. Add the two endpoints, authenticated by the session your `/login` already issues.

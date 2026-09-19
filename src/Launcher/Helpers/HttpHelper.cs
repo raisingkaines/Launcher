@@ -29,6 +29,13 @@ public static class HttpHelper
 
     public static HttpClient DownloadHttpClient => _downloadHttpClient;
 
+    /// <summary>
+    /// The shared client for small API calls. Building one per request leaks its handler
+    /// and its sockets, which matters now that portraits are uploaded per character.
+    /// Do not dispose it.
+    /// </summary>
+    public static HttpClient SharedHttpClient => _httpClient;
+
     public static HttpClient CreateHttpClient()
     {
         var httpClient = new HttpClient(new HttpLoggingHandler(new SocketsHttpHandler()

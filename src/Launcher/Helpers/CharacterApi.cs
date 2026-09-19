@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Collections.Generic;
 using System.Net;
@@ -27,6 +28,25 @@ public static class CharacterApi
     private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
+    /// How long to wait before deciding a server has not implemented this. The client is
+    /// waiting on the answer, so an unsupported server must cost very little.
+    /// </summary>
+    private static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// Servers that gave a definite "no". Remembered for the session so one is not probed
+    /// again on every login.
+    ///
+    /// Only definite answers go in here - a 404, or a reply that is not JSON. A timeout or
+    /// a network blip must never latch the feature off, because the server may be fine on
+    /// the next attempt.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, bool> _unsupported = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Forgets what was learned about a server, for when its address changes.</summary>
+    public static void ForgetCapabilities(string webApiUrl) => _unsupported.TryRemove(webApiUrl, out _);
+
+    /// <summary>
     /// Asks the server for the characters on the logged in account.
     /// Returns null when the server does not support this, or anything goes wrong.
     /// </summary>
@@ -38,16 +58,26 @@ public static class CharacterApi
             if (!TryBuildUri(webApiUrl, "characters", out var uri))
                 return null;
 
+            // Already known not to support this - do not make the player wait again.
+            if (_unsupported.ContainsKey(webApiUrl))
+                return null;
+
             using var request = new HttpRequestMessage(HttpMethod.Get, uri);
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sessionId);
 
-            using var response = await HttpHelper.CreateHttpClient()
-                .SendAsync(request, cancellationToken);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            timeout.CancelAfter(ProbeTimeout);
+
+            using var response = await HttpHelper.SharedHttpClient
+                .SendAsync(request, timeout.Token);
 
             if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed)
             {
                 _logger.Debug("Server at '{Url}' does not support character select.", webApiUrl);
+
+                _unsupported[webApiUrl] = true;
 
                 return null;
             }
@@ -68,6 +98,8 @@ public static class CharacterApi
             {
                 _logger.Debug("Server at '{Url}' answered the character probe with '{MediaType}', treating as unsupported.",
                     webApiUrl, mediaType ?? "no content type");
+
+                _unsupported[webApiUrl] = true;
 
                 return null;
             }
@@ -103,7 +135,7 @@ public static class CharacterApi
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sessionId);
 
-            using var response = await HttpHelper.CreateHttpClient()
+            using var response = await HttpHelper.SharedHttpClient
                 .SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -156,7 +188,7 @@ public static class CharacterApi
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sessionId);
 
-            using var response = await HttpHelper.CreateHttpClient()
+            using var response = await HttpHelper.SharedHttpClient
                 .SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -227,7 +259,7 @@ public static class CharacterApi
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sessionId);
 
-            using var response = await HttpHelper.CreateHttpClient()
+            using var response = await HttpHelper.SharedHttpClient
                 .SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -239,7 +271,22 @@ public static class CharacterApi
                 return false;
             }
 
-            return true;
+            // Same trap as the character probe: a catch-all route can answer 200 to
+            // anything. Recording that as sent would mean the portrait is never retried,
+            // so require the JSON acknowledgement before believing it.
+            var mediaType = response.Content.Headers.ContentType?.MediaType;
+
+            if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Debug("Portrait upload to '{Url}' answered '{MediaType}', treating as unsupported.",
+                    webApiUrl, mediaType ?? "no content type");
+
+                return false;
+            }
+
+            var ack = await response.Content.ReadFromJsonAsync<PortraitUploadResponse>(cancellationToken);
+
+            return ack?.Ok == true;
         }
         catch (Exception ex)
         {
@@ -272,7 +319,7 @@ public static class CharacterApi
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sessionId);
 
-            using var response = await HttpHelper.CreateHttpClient()
+            using var response = await HttpHelper.SharedHttpClient
                 .SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)

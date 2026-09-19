@@ -72,3 +72,12 @@ public sealed class CharacterCreateResponse
     /// </summary>
     public bool HookInstalled { get; set; }
 }
+
+/// <summary>
+/// The acknowledgement for a stored portrait. A server that did not really take it must
+/// not look like one that did, or the launcher will never send that portrait again.
+/// </summary>
+public sealed class PortraitUploadResponse
+{
+    public bool Ok { get; set; }
+}
