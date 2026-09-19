@@ -60,6 +60,17 @@ public partial class Main : Window
         // After InitializeComponent, or these read NaN: the XAML is what sets the size.
         _normalWidth = Width;
         _normalHeight = Height;
+
+        // Same reason: the chrome's windowed look comes from the XAML and full screen
+        // strips it, so capture it here to put back afterwards.
+        _windowedBackground = Background;
+        _windowedMargin = WindowChrome.Margin;
+        _windowedCorner = WindowChrome.CornerRadius;
+        _windowedBorder = WindowChrome.BorderThickness;
+
+        // Without this the scale is only recomputed by the two calls in ToggleFullScreen,
+        // and the windowed pass that learns the design size never runs at all.
+        SizeChanged += (_, _) => ApplyUiScale();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
