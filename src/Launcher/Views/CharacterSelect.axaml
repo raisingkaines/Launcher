@@ -62,6 +62,16 @@
                              IsVisible="{Binding Portrait, Converter={x:Static ObjectConverters.IsNull}}"
                              Text="{Binding Initials}" />
 
+                  <!-- The create-one tile -->
+                  <Path Width="26"
+                        Height="26"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Data="{StaticResource Icons.Add}"
+                        Fill="{StaticResource Color.Gold}"
+                        IsVisible="{Binding IsNewCharacter}"
+                        Stretch="Uniform" />
+
                   <Border ClipToBounds="True" CornerRadius="42">
                     <Image Source="{Binding Portrait}" Stretch="UniformToFill" />
                   </Border>

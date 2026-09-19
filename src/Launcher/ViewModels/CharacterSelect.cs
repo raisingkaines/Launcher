@@ -30,6 +30,12 @@ public partial class CharacterCard : ObservableObject
 
     public required CharacterInfo Info { get; init; }
 
+    /// <summary>
+    /// The "create one" tile rather than a real character. Choosing it launches the way
+    /// the launcher always did, so the client shows its own creation flow.
+    /// </summary>
+    public bool IsNewCharacter { get; init; }
+
     public string Name => Info.Name;
 
     /// <summary>
@@ -39,6 +45,10 @@ public partial class CharacterCard : ObservableObject
     {
         get
         {
+            // The create-one tile shows a plus instead.
+            if (IsNewCharacter)
+                return string.Empty;
+
             var parts = Info.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             return parts.Length switch
@@ -90,6 +100,14 @@ public partial class CharacterSelect : Popup
 
         Selected = Characters.FirstOrDefault();
 
+        // Without this an account that already has characters could never make another:
+        // the picker replaces the in-game select screen, which is where you used to do it.
+        Characters.Add(new CharacterCard
+        {
+            IsNewCharacter = true,
+            Info = new CharacterInfo { Name = App.GetText("Text.CharacterSelect.New") }
+        });
+
         View = new Views.CharacterSelect
         {
             DataContext = this
@@ -102,6 +120,9 @@ public partial class CharacterSelect : Popup
     {
         foreach (var card in Characters.ToArray())
         {
+            if (card.IsNewCharacter)
+                continue;
+
             var bytes = await CharacterApi.TryGetPortraitAsync(card.Info.PortraitUrl, _sessionId);
 
             if (bytes is null || bytes.Length == 0)
@@ -137,6 +158,17 @@ public partial class CharacterSelect : Popup
     {
         if (Selected is null)
             return true;
+
+        // Launch with no character so the client shows its own flow, which is where
+        // characters are created.
+        if (Selected.IsNewCharacter)
+        {
+            StatusMessage = App.GetText("Text.CharacterSelect.Creating");
+
+            await _launchAsync(null);
+
+            return true;
+        }
 
         StatusMessage = App.GetText("Text.CharacterSelect.Starting");
 

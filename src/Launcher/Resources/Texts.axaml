@@ -129,4 +129,6 @@
   <!-- Character Select -->
   <x:String x:Key="Text.CharacterSelect.Title" xml:space="preserve">Choose your character</x:String>
   <x:String x:Key="Text.CharacterSelect.Starting" xml:space="preserve">Starting the game...</x:String>
+  <x:String x:Key="Text.CharacterSelect.New" xml:space="preserve">New Character</x:String>
+  <x:String x:Key="Text.CharacterSelect.Creating" xml:space="preserve">Opening character creation...</x:String>
 </ResourceDictionary>
