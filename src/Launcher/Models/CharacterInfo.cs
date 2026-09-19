@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Launcher.Models;
 
@@ -25,7 +26,18 @@ public sealed class CharacterInfo
     /// </summary>
     public string? PortraitUrl { get; set; }
 
-    public DateTimeOffset? LastLogin { get; set; }
+    /// <summary>
+    /// Kept as a string on purpose. Servers format timestamps differently - SQLite hands
+    /// back "2026-09-19 01:07:39.819852+00:00", which is not ISO 8601 - and one odd
+    /// value in an optional field must never throw away the whole character list.
+    /// </summary>
+    public string? LastLogin { get; set; }
+
+    public DateTimeOffset? LastLoginAt =>
+        DateTimeOffset.TryParse(LastLogin, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed)
+            ? parsed
+            : null;
 }
 
 public sealed class CharacterListResponse

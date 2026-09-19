@@ -85,7 +85,7 @@ public partial class CharacterSelect : Popup
         _sessionId = sessionId;
         _launchAsync = launchAsync;
 
-        foreach (var info in characters.OrderByDescending(x => x.LastLogin ?? DateTimeOffset.MinValue))
+        foreach (var info in characters.OrderByDescending(x => x.LastLoginAt ?? DateTimeOffset.MinValue))
             Characters.Add(new CharacterCard { Info = info });
 
         Selected = Characters.FirstOrDefault();
