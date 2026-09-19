@@ -86,6 +86,8 @@ public partial class App : Application
                 }
                 else
                 {
+                    app._main.Message = GetText("Text.Main.UpdateAvailable", updateInfo.TargetFullRelease.Version);
+
                     await _updateManager.DownloadUpdatesAsync(updateInfo, p =>
                     {
                         app._main.Message = GetText("Text.Main.Downloading", updateInfo.TargetFullRelease.Version, p);
@@ -99,11 +101,36 @@ public partial class App : Application
                     return;
                 }
             }
+            else
+            {
+                // Portable and development builds have no Velopack install to patch, so
+                // send the player to the downloads page rather than doing nothing at all.
+                AddNotification(GetText("Text.Main.UpdatePortable"));
+
+                await OpenReleasesPageAsync();
+            }
         }
         catch (Exception ex)
         {
             app._logger.Error(ex, "Error checking for updates");
             AddNotification(GetText("Text.Main.UpdateError"), true);
+        }
+    }
+
+    private static async Task OpenReleasesPageAsync()
+    {
+        if (Current is not App app)
+            return;
+
+        try
+        {
+            await GetWindow().Launcher.LaunchUriAsync(new Uri($"{GitHubRepoUrl}/releases/latest"));
+        }
+        catch (Exception ex)
+        {
+            app._logger.Error(ex, "Could not open the releases page.");
+
+            AddNotification($"Download the latest version from {GitHubRepoUrl}/releases", true);
         }
     }
 

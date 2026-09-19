@@ -113,4 +113,16 @@
   <x:String x:Key="Text.Server.News" xml:space="preserve">Server News</x:String>
   <x:String x:Key="Text.Server.News.Tooltip" xml:space="preserve">Show server news</x:String>
   <x:String x:Key="Text.Server.Options.Tooltip" xml:space="preserve">Server options</x:String>
+
+  <!-- Crash Report -->
+  <x:String x:Key="Text.Crash.Crashed" xml:space="preserve">The game closed unexpectedly</x:String>
+  <x:String x:Key="Text.Crash.EndedEarly" xml:space="preserve">The game closed before it finished loading</x:String>
+  <x:String x:Key="Text.Crash.Hint" xml:space="preserve">Copy these details when you report the problem, or open the folder for the full logs.</x:String>
+  <x:String x:Key="Text.Crash.OpenLogs" xml:space="preserve">Open Log Folder</x:String>
+  <x:String x:Key="Text.Crash.Copy" xml:space="preserve">Copy Details</x:String>
+  <x:String x:Key="Text.Crash.Close" xml:space="preserve">Close</x:String>
+
+  <!-- Updates -->
+  <x:String x:Key="Text.Main.UpdateAvailable" xml:space="preserve">Update {0} found, downloading...</x:String>
+  <x:String x:Key="Text.Main.UpdatePortable" xml:space="preserve">This is the portable build, so it cannot update itself. Opening the downloads page.</x:String>
 </ResourceDictionary>

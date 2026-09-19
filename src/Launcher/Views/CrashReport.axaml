@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<UserControl x:Class="Launcher.Views.CrashReport"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Launcher.ViewModels"
+             d:DesignHeight="360"
+             d:DesignWidth="500"
+             x:DataType="vm:CrashReport"
+             mc:Ignorable="d">
+
+  <Grid Width="740" Margin="6" RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- Header -->
+    <StackPanel Grid.Row="0"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+      <Path Width="17"
+            Height="17"
+            VerticalAlignment="Center"
+            Data="{StaticResource Icons.Error}"
+            Fill="{StaticResource Color.Gold}"
+            Stretch="Uniform" />
+      <TextBlock FontFamily="{StaticResource FontDefault}"
+                 FontSize="18"
+                 Text="{Binding Headline, Mode=OneWay}" />
+    </StackPanel>
+
+    <TextBlock Grid.Row="1"
+               Margin="0,6,0,8"
+               HorizontalAlignment="Center"
+               FontFamily="{StaticResource FontDefault}"
+               FontSize="13"
+               Foreground="{StaticResource Color.FG2}"
+               Text="{StaticResource Text.Crash.Hint}"
+               TextWrapping="Wrap" />
+
+    <!-- Details -->
+    <Border Grid.Row="2"
+            MaxHeight="230"
+            Background="{StaticResource Color.Contents}"
+            BorderBrush="{StaticResource Color.Border}"
+            BorderThickness="1"
+            CornerRadius="6">
+      <TextBox Margin="4"
+               Padding="6"
+               VerticalContentAlignment="Top"
+               Classes="no_background no_border"
+               FontFamily="Consolas,Menlo,monospace"
+               FontSize="11"
+               IsReadOnly="True"
+               ScrollViewer.HorizontalScrollBarVisibility="Auto"
+               ScrollViewer.VerticalScrollBarVisibility="Auto"
+               Text="{Binding Details, Mode=OneWay}"
+               TextWrapping="NoWrap" />
+    </Border>
+
+    <!-- Buttons -->
+    <StackPanel Grid.Row="3"
+                Margin="0,12,0,0"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+
+      <Button Classes="flat primary"
+              Command="{Binding OpenClientLogsCommand}"
+              Content="{StaticResource Text.Crash.OpenLogs}"
+              FontFamily="{StaticResource FontDefault}"
+              Padding="12,6" />
+
+      <Button Classes="flat primary"
+              Command="{Binding CopyDetailsCommand}"
+              Content="{StaticResource Text.Crash.Copy}"
+              FontFamily="{StaticResource FontDefault}"
+              Padding="12,6" />
+
+      <Button Classes="flat primary"
+              Command="{Binding CancelCommand}"
+              Content="{StaticResource Text.Crash.Close}"
+              FontFamily="{StaticResource FontDefault}"
+              Padding="12,6" />
+    </StackPanel>
+  </Grid>
+</UserControl>

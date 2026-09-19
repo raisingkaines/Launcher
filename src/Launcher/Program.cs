@@ -62,8 +62,8 @@ internal sealed class Program
         config.AddRule(LogLevel.Debug, LogLevel.Fatal, debuggerTarget);
 #endif
 
-        // Ensure logs directory exists
-        var logsDir = Path.Combine(Directory.GetCurrentDirectory(), "logs");
+        // Keep this in step with Constants.LogsDirectory, which is what "Open Logs" opens.
+        var logsDir = Constants.LogsDirectory;
         if (!Directory.Exists(logsDir))
         {
             Directory.CreateDirectory(logsDir);

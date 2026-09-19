@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.Platform.Storage;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -195,10 +196,56 @@ public partial class Server : ObservableObject
         UpdateWelcome();
     }
 
+    /// <summary>
+    /// When the client was started, so an exit can be judged against how long it ran.
+    /// </summary>
+    private DateTime _launchedAt;
+
+    public void NoteClientLaunched() => _launchedAt = DateTime.UtcNow;
+
     public void ClientProcessExited(object? sender, EventArgs e)
     {
+        // Read the exit code before disposing, and remember when it started.
+        int? exitCode = null;
+
+        try
+        {
+            exitCode = Process?.ExitCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.Debug(ex, "Could not read the exit code for: {Name}.", Info.Name);
+        }
+
+        var ranFor = _launchedAt == default ? TimeSpan.Zero : DateTime.UtcNow - _launchedAt;
+
         Process?.Dispose();
-        Process = null;
+
+        // Exited is raised on a thread pool thread; everything below touches the UI.
+        Dispatcher.UIThread.Post(() =>
+        {
+            Process = null;
+
+            ReportIfClosedBadly(exitCode, ranFor);
+        });
+    }
+
+    /// <summary>
+    /// A non-zero exit means the game fell over. A clean exit in the first few seconds
+    /// means it never finished loading - to the player both just look like it died.
+    /// </summary>
+    private void ReportIfClosedBadly(int? exitCode, TimeSpan ranFor)
+    {
+        var crashed = exitCode is not null and not 0;
+        var endedEarly = exitCode == 0 && ranFor > TimeSpan.Zero && ranFor < CrashReportHelper.ShortSessionThreshold;
+
+        if (!crashed && !endedEarly)
+            return;
+
+        _logger.Warn("Client for {Name} exited with code {ExitCode} after {Seconds:0.#}s.",
+            Info.Name, exitCode, ranFor.TotalSeconds);
+
+        App.ShowPopup(new CrashReport(Info, exitCode, ranFor, endedEarly));
     }
 
     [RelayCommand]

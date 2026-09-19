@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
@@ -272,6 +272,8 @@ public partial class Login : Popup
         try
         {
             _server.Process.Start();
+
+            _server.NoteClientLaunched();
         }
         catch (Exception ex)
         {

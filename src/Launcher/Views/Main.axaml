@@ -292,7 +292,10 @@
 
           <Border Background="#000000" Opacity="0.55" />
 
-          <Grid Width="500" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <Grid MinWidth="500"
+              MaxWidth="840"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
             <ContentControl ClipToBounds="False" Content="{Binding Popup}">
               <ContentControl.DataTemplates>
                 <DataTemplate DataType="vm:Popup">
