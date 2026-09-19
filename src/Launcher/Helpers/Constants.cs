@@ -32,14 +32,13 @@ public static class Constants
     /// enough not to be busy while someone reads the server list.
     /// </summary>
     /// <summary>
-    /// The Discord application whose name and artwork appear in Rich Presence.
-    ///
-    /// This is still the upstream "OSFR Launcher" application, so Discord shows that name
-    /// rather than this one. Replace it with a Free Realms Legacy application created at
-    /// https://discord.com/developers/applications, and upload art there under the keys in
-    /// <see cref="DiscordLargeImage"/> and <see cref="DiscordSmallImage"/>.
+    /// The Discord application whose name and artwork appear in Rich Presence. Its name in
+    /// the developer portal is what people see above the activity, and the art has to be
+    /// uploaded there under the keys in <see cref="DiscordLargeImage"/> and
+    /// <see cref="DiscordSmallImage"/> - an asset key that has not been uploaded simply
+    /// shows no image.
     /// </summary>
-    public const long DiscordClientId = 1223728876199608410;
+    public const long DiscordClientId = 1550796190159736842;
 
     /// <summary>Art uploaded to the Discord application, by asset key.</summary>
     public const string DiscordLargeImage = "legacy_logo";
