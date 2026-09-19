@@ -106,9 +106,10 @@
         </Border>
 
         <!-- Server Rail.
-             The column stays 222 wide so the card beside it never moves, while the rail
-             itself spans both columns and widens over the artwork whenever the pointer is
-             inside it. The names are what needed the room: at 222 they truncate. -->
+             Hidden until the pointer reaches the left edge, then it slides out over the
+             artwork. Its column is zero wide, so nothing reserves space for it and the
+             card beside it gets the whole window; the rail spans both columns and draws
+             on top of them instead. -->
         <Panel Grid.Column="0"
                Grid.ColumnSpan="2"
                HorizontalAlignment="Left"
