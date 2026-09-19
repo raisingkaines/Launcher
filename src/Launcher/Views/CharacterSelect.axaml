@@ -42,39 +42,31 @@
                     Cursor="Hand">
               <StackPanel Width="104" Orientation="Vertical">
 
-                <Panel Width="84" Height="84">
-                  <Border Background="#33FFFFFF"
-                          BorderBrush="{StaticResource Color.Border}"
-                          BorderThickness="1"
-                          CornerRadius="42" />
+                <!-- The site's own tiles are the frame, so the photo sits on top of one
+                     rather than being clipped into a circle. -->
+                <Panel Width="92" Height="78" HorizontalAlignment="Center">
 
-                  <!-- Selection ring -->
-                  <Ellipse IsVisible="{Binding IsSelected}"
-                           Stroke="{StaticResource Color.Gold}"
-                           StrokeThickness="3" />
-
-
-                  <!-- No headshot yet: the placeholder the website used -->
-                  <Image Width="52"
-                         Height="52"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Center"
-                         IsVisible="{Binding ShowUnknown}"
+                  <Image IsVisible="{Binding !IsNewCharacter}"
                          Source="/Assets/char_unknown.png"
                          Stretch="Uniform" />
 
-                  <!-- Create a character - the website's own icon -->
-                  <Image Width="52"
-                         Height="52"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Center"
-                         IsVisible="{Binding IsNewCharacter}"
+                  <Image IsVisible="{Binding IsNewCharacter}"
                          Source="/Assets/char_new.png"
                          Stretch="Uniform" />
 
-                  <Border ClipToBounds="True" CornerRadius="42">
-                    <Image Source="{Binding Portrait}" Stretch="UniformToFill" />
-                  </Border>
+                  <!-- Covers the "?" when the character has a headshot -->
+                  <Image Width="64"
+                         Height="64"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         Source="{Binding Portrait}"
+                         Stretch="UniformToFill" />
+
+                  <!-- Selection ring, squared off to match the tile -->
+                  <Border BorderBrush="{StaticResource Color.Gold}"
+                          BorderThickness="3"
+                          CornerRadius="8"
+                          IsVisible="{Binding IsSelected}" />
                 </Panel>
 
                 <TextBlock Margin="0,6,0,0"
