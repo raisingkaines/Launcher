@@ -136,7 +136,8 @@ public static class CharacterApi
     /// <summary>
     /// Downloads a headshot. The URL comes from the server; the launcher never builds one.
     /// </summary>
-    public static async Task<byte[]?> TryGetPortraitAsync(string? portraitUrl, CancellationToken cancellationToken = default)
+    public static async Task<byte[]?> TryGetPortraitAsync(
+        string? portraitUrl, string sessionId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(portraitUrl))
             return null;
@@ -149,7 +150,23 @@ public static class CharacterApi
             if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
                 return null;
 
-            return await HttpHelper.CreateHttpClient().GetByteArrayAsync(uri, cancellationToken);
+            // The portrait route is session protected, so one player cannot read another
+            // player's headshot by guessing guids. Send the token or it answers 401.
+            using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sessionId);
+
+            using var response = await HttpHelper.CreateHttpClient()
+                .SendAsync(request, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.Debug("Portrait request to '{Url}' returned {Status}.", uri, response.StatusCode);
+
+                return null;
+            }
+
+            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
         }
         catch (Exception ex)
         {

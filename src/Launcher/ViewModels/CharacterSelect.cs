@@ -102,7 +102,7 @@ public partial class CharacterSelect : Popup
     {
         foreach (var card in Characters.ToArray())
         {
-            var bytes = await CharacterApi.TryGetPortraitAsync(card.Info.PortraitUrl);
+            var bytes = await CharacterApi.TryGetPortraitAsync(card.Info.PortraitUrl, _sessionId);
 
             if (bytes is null || bytes.Length == 0)
                 continue;
