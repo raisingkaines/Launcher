@@ -100,6 +100,10 @@ public partial class Main : ObservableObject
         _statusTimer.Tick += OnStatusTimerTick;
         _statusTimer.Start();
 
+        // Players rarely press the update button, so look on every launch. This is what
+        // makes a release pushed to GitHub actually reach anyone.
+        _ = App.CheckForUpdatesSilentlyAsync();
+
         UpdateDiscordActivity();
     }
 

@@ -62,27 +62,46 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
+    private static bool _updateCheckRunning;
+
     [RelayCommand(AllowConcurrentExecutions = false)]
-    public static async Task CheckForUpdatesAsync()
+    public static Task CheckForUpdatesAsync() => RunUpdateCheckAsync(interactive: true);
+
+    /// <summary>
+    /// The check made on every launch. It stays quiet unless there is something to
+    /// install, so it never nags a player who is already up to date.
+    /// </summary>
+    public static Task CheckForUpdatesSilentlyAsync() => RunUpdateCheckAsync(interactive: false);
+
+    private static async Task RunUpdateCheckAsync(bool interactive)
     {
         if (Current is not App app)
             throw new InvalidOperationException();
+
+        if (_updateCheckRunning)
+            return;
+
+        _updateCheckRunning = true;
 
         try
         {
             if (_updateManager.IsInstalled)
             {
-                app._main.Message = GetText("Text.Main.CheckingForUpdates");
+                if (interactive)
+                    app._main.Message = GetText("Text.Main.CheckingForUpdates");
 
                 var updateInfo = await _updateManager.CheckForUpdatesAsync();
 
                 if (updateInfo is null)
                 {
-                    app._main.Message = GetText("Text.Main.NoUpdatesFound");
+                    if (interactive)
+                    {
+                        app._main.Message = GetText("Text.Main.NoUpdatesFound");
 
-                    await Task.Delay(500);
+                        await Task.Delay(500);
 
-                    app._main.Message = string.Empty;
+                        app._main.Message = string.Empty;
+                    }
                 }
                 else
                 {
@@ -101,7 +120,7 @@ public partial class App : Application
                     return;
                 }
             }
-            else
+            else if (interactive)
             {
                 // Portable and development builds have no Velopack install to patch, so
                 // send the player to the downloads page rather than doing nothing at all.
@@ -113,7 +132,13 @@ public partial class App : Application
         catch (Exception ex)
         {
             app._logger.Error(ex, "Error checking for updates");
-            AddNotification(GetText("Text.Main.UpdateError"), true);
+
+            if (interactive)
+                AddNotification(GetText("Text.Main.UpdateError"), true);
+        }
+        finally
+        {
+            _updateCheckRunning = false;
         }
     }
 

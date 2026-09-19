@@ -401,3 +401,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+# Velopack release output and packer scratch space
+releases/
+.build-temp/

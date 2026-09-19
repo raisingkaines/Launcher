@@ -39,6 +39,33 @@ and refuses to move while the game is running.
 The launcher's own settings and saved logins stay in your user profile - only the game
 files move.
 
+### Pushing an update to everyone
+
+Installed launchers check GitHub on every launch and again whenever someone presses the
+refresh button in the rail. Publishing a new release is what reaches them.
+
+One command does the whole thing from your own machine:
+
+```powershell
+$env:GITHUB_TOKEN = "ghp_..."     # a token with "repo" scope
+.\release.ps1 -Version 1.2.0
+```
+
+That will:
+
+1. Download the current published release, so this build ships as a delta - players
+   download a few MB rather than the whole 30.
+2. Publish and pack the app with Velopack.
+3. Create the GitHub release and upload everything to it.
+
+Add `-Draft` to upload without releasing, and publish it on GitHub when you are ready.
+
+Bump the version every time; Velopack refuses to pack a version that is not newer than
+what is already in `releases/`. Nothing in `releases/` or `.build-temp/` is committed.
+
+Players on the portable build cannot self-update - pressing the button sends them to the
+downloads page instead.
+
 ### Building from source
 
 Needs the .NET 10 SDK and [Velopack](https://velopack.io) (`dotnet tool install -g vpk`).
