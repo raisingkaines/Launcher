@@ -23,11 +23,20 @@ public partial class Main : Window
 
     public readonly ViewModels.Main ViewModel = new();
 
+    /// <summary>The size to come back to, captured before full screen clears it.</summary>
+    private readonly double _normalWidth;
+
+    private readonly double _normalHeight;
+
     public Main()
     {
         DataContext = ViewModel;
 
         InitializeComponent();
+
+        // After InitializeComponent, or these read NaN: the XAML is what sets the size.
+        _normalWidth = Width;
+        _normalHeight = Height;
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -146,21 +155,37 @@ public partial class Main : Window
         => WindowState = WindowState.Minimized;
 
     /// <summary>
-    /// The window is a fixed size by design, and a window that cannot be resized cannot
-    /// go full screen, so resizing is turned on for as long as it is full screen and off
-    /// again on the way back. It is never resizable while it has borders to drag.
+    /// Going full screen has to undo three things the floating window relies on.
+    ///
+    /// The window cannot be resized, and a window that cannot be resized cannot go full
+    /// screen. It also has an explicit Width and Height, which pin it at that size even
+    /// once the state changes - which is why it did not fill the screen. And its backdrop
+    /// is transparent so the rounded corners and shadow can show the desktop through,
+    /// which full screen renders as a see-through window.
+    ///
+    /// All three are restored on the way back, so it is never resizable while it has
+    /// borders to drag.
     /// </summary>
     private void ToggleFullScreen()
     {
         if (WindowState == WindowState.FullScreen)
         {
             WindowState = WindowState.Normal;
+
+            TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
+            Width = _normalWidth;
+            Height = _normalHeight;
             CanResize = false;
 
             return;
         }
 
         CanResize = true;
+
+        Width = double.NaN;
+        Height = double.NaN;
+        TransparencyLevelHint = [WindowTransparencyLevel.None];
+
         WindowState = WindowState.FullScreen;
     }
 
