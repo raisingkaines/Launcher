@@ -47,13 +47,24 @@
       <!-- Reads as floating over the artwork rather than pushing it aside. -->
       <Setter Property="BoxShadow" Value="6 0 18 0 #66000000" />
     </Style>
+
+    <!-- The inset, rounded chrome is what makes the window look like it floats. Full
+         screen has no desktop to float over, and a 6px margin there would only show the
+         desktop through the edges. -->
+    <Style Selector="Window:fullscreen Border#WindowChrome">
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BoxShadow" Value="none" />
+    </Style>
   </Window.Styles>
 
   <Design.DataContext>
     <vm:Main />
   </Design.DataContext>
 
-  <Border Margin="6"
+  <Border x:Name="WindowChrome"
+          Margin="6"
           Background="{StaticResource Color.Window}"
           BorderBrush="#3A4059"
           BorderThickness="1"
@@ -82,6 +93,14 @@
                     Spacing="6">
           <Button Classes="caption" Click="OnMinimise" ToolTip.Tip="Minimise">
             <Rectangle Width="10" Height="2" Fill="White" />
+          </Button>
+          <Button Classes="caption"
+                  Click="OnToggleFullScreen"
+                  ToolTip.Tip="Full screen (F11)">
+            <Rectangle Width="9"
+                       Height="9"
+                       Stroke="White"
+                       StrokeThickness="1.5" />
           </Button>
           <Button Classes="caption close" Click="OnClose" ToolTip.Tip="Close">
             <TextBlock Margin="0,-1,0,0"

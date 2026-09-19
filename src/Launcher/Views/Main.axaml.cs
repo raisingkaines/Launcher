@@ -135,12 +135,36 @@ public partial class Main : Window
     /// </summary>
     private void OnTitleBarPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (WindowState == WindowState.FullScreen)
+            return;
+
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             BeginMoveDrag(e);
     }
 
     private void OnMinimise(object? sender, RoutedEventArgs e)
         => WindowState = WindowState.Minimized;
+
+    /// <summary>
+    /// The window is a fixed size by design, and a window that cannot be resized cannot
+    /// go full screen, so resizing is turned on for as long as it is full screen and off
+    /// again on the way back. It is never resizable while it has borders to drag.
+    /// </summary>
+    private void ToggleFullScreen()
+    {
+        if (WindowState == WindowState.FullScreen)
+        {
+            WindowState = WindowState.Normal;
+            CanResize = false;
+
+            return;
+        }
+
+        CanResize = true;
+        WindowState = WindowState.FullScreen;
+    }
+
+    private void OnToggleFullScreen(object? sender, RoutedEventArgs e) => ToggleFullScreen();
 
     // Goes through Close() so the "still downloading" guard in OnClosing still applies.
     private void OnClose(object? sender, RoutedEventArgs e)
@@ -161,6 +185,22 @@ public partial class Main : Window
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
+        if (e.Key == Key.F11)
+        {
+            ToggleFullScreen();
+            e.Handled = true;
+
+            return;
+        }
+
+        if (e.Key == Key.Escape && WindowState == WindowState.FullScreen && ViewModel.Popup is null)
+        {
+            ToggleFullScreen();
+            e.Handled = true;
+
+            return;
+        }
+
         if (e.Key == Key.Escape)
         {
             App.CancelPopup();
