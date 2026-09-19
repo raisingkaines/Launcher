@@ -230,7 +230,8 @@ public partial class Main : Window
     private void OnToggleFullScreen(object? sender, RoutedEventArgs e) => ToggleFullScreen();
 
     /// <summary>
-    /// Scales the interface to the window. Windowed it is left alone at 1:1, and that
+    /// Scales what is below the title bar. The bar itself keeps its own size: it is
+    /// chrome, and scaling it just made a chunky strip across the screen. Windowed it is left alone at 1:1, and that
     /// pass is also where the design size is learned; full screen it is pinned to that
     /// size and scaled up by whichever of width or height runs out first, so nothing is
     /// ever cropped.
@@ -239,15 +240,15 @@ public partial class Main : Window
     {
         if (WindowState != WindowState.FullScreen)
         {
-            ContentRoot.Width = double.NaN;
-            ContentRoot.Height = double.NaN;
+            StageRoot.Width = double.NaN;
+            StageRoot.Height = double.NaN;
             UiScaler.LayoutTransform = null;
 
             // Bounds still hold the windowed layout here, which is what to scale from.
-            if (ContentRoot.Bounds.Width > 0 && ContentRoot.Bounds.Height > 0)
+            if (StageRoot.Bounds.Width > 0 && StageRoot.Bounds.Height > 0)
             {
-                _designWidth = ContentRoot.Bounds.Width;
-                _designHeight = ContentRoot.Bounds.Height;
+                _designWidth = StageRoot.Bounds.Width;
+                _designHeight = StageRoot.Bounds.Height;
             }
 
             return;
@@ -257,10 +258,14 @@ public partial class Main : Window
         if (_designWidth <= 0 || _designHeight <= 0)
             return;
 
-        ContentRoot.Width = _designWidth;
-        ContentRoot.Height = _designHeight;
+        StageRoot.Width = _designWidth;
+        StageRoot.Height = _designHeight;
 
-        var scale = Math.Min(Bounds.Width / _designWidth, Bounds.Height / _designHeight);
+        // Whatever the title bar leaves is what there is to fill; the bar keeps its
+        // own size, because scaling it only made it a chunky stretched strip.
+        var available = Bounds.Height - ContentRoot.RowDefinitions[0].ActualHeight;
+
+        var scale = Math.Min(Bounds.Width / _designWidth, available / _designHeight);
 
         // Only ever bigger: the window cannot go below the design size anyway.
         scale = Math.Max(1, scale);
