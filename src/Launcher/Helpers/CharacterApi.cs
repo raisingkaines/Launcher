@@ -58,6 +58,19 @@ public static class CharacterApi
                 return null;
             }
 
+            // A 200 alone does not mean support. Servers commonly have a catch-all that
+            // answers every unknown path - Server 1 returns 200 with an empty
+            // octet-stream body - so require JSON before believing it.
+            var mediaType = response.Content.Headers.ContentType?.MediaType;
+
+            if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Debug("Server at '{Url}' answered the character probe with '{MediaType}', treating as unsupported.",
+                    webApiUrl, mediaType ?? "no content type");
+
+                return null;
+            }
+
             var result = await response.Content.ReadFromJsonAsync<CharacterListResponse>(cancellationToken);
 
             return result?.Characters;

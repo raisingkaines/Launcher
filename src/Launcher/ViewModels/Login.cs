@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.InteropServices;
@@ -259,7 +260,15 @@ public partial class Login : Popup
         }
 
         if (!string.IsNullOrEmpty(serverArguments))
-            launcherArguments.Add(serverArguments);
+        {
+            // A server that already launches straight into a character sends its own
+            // Server/Guid/Ticket in LaunchArguments, for the character it picked. Those
+            // would land after ours and override the player's choice, so drop them and
+            // keep everything else the server asked for.
+            launcherArguments.Add(launch is null
+                ? serverArguments
+                : StripLaunchOverrides(serverArguments));
+        }
 
         var arguments = string.Join(' ', launcherArguments);
         var workingDirectory = InstallPaths.GetClientPath(_server.Info);
@@ -327,6 +336,31 @@ public partial class Login : Popup
             _server.Process?.Dispose();
             _server.Process = null;
         }
+    }
+
+    private static readonly string[] _characterLaunchKeys = ["Server", "Guid", "Ticket", "SessionId"];
+
+    /// <summary>
+    /// Removes the arguments that decide which character is loaded, leaving the rest of
+    /// what the server asked for (ini file, asset delivery, TCG settings) untouched.
+    /// </summary>
+    private static string StripLaunchOverrides(string serverArguments)
+    {
+        var kept = serverArguments
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(argument =>
+            {
+                var separator = argument.IndexOf('=');
+
+                if (separator <= 0)
+                    return true;
+
+                var key = argument[..separator];
+
+                return !_characterLaunchKeys.Contains(key, StringComparer.OrdinalIgnoreCase);
+            });
+
+        return string.Join(' ', kept);
     }
 
     private async Task NotifyDirectX9MissingAsync()
