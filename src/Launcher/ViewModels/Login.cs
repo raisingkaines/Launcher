@@ -8,6 +8,8 @@ using System.Net.Http.Json;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
+using Avalonia.Threading;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -150,8 +152,7 @@ public partial class Login : Popup
 
             SaveRememberedCredentials();
 
-            // If login is successful, launch the client
-            await LaunchClientAsync(loginResponse.SessionId, loginResponse.LaunchArguments);
+            await ContinueAfterLoginAsync(loginResponse);
 
             return true;
         }
@@ -163,6 +164,37 @@ public partial class Login : Popup
 
             return false;
         }
+    }
+
+    /// <summary>
+    /// Servers that support it let the player pick a character here rather than in game.
+    /// All of it is optional: if the server has not implemented it, or refuses the
+    /// selection, the client is launched exactly as it always was.
+    /// See docs/character-select-protocol.md.
+    /// </summary>
+    private async Task ContinueAfterLoginAsync(LoginResponse loginResponse)
+    {
+        var characters = await CharacterApi.TryGetCharactersAsync(
+            _server.Info.WebApiUrl, loginResponse.SessionId);
+
+        // No support, or an account with no characters yet - launch into the in-game flow,
+        // which is what sends a new player to character creation.
+        if (characters is null || characters.Count == 0)
+        {
+            await LaunchClientAsync(loginResponse.SessionId, loginResponse.LaunchArguments);
+
+            return;
+        }
+
+        var characterSelect = new CharacterSelect(
+            _server,
+            loginResponse.SessionId,
+            characters,
+            launch => LaunchClientAsync(loginResponse.SessionId, loginResponse.LaunchArguments, launch));
+
+        // This login popup is still marked in progress, and ShowPopup refuses to replace
+        // a popup that is. Queue the swap so it runs once this one has closed.
+        Dispatcher.UIThread.Post(() => App.ShowPopup(characterSelect));
     }
 
     private void AddSecureWarning()
@@ -200,7 +232,7 @@ public partial class Login : Popup
         Settings.Instance.Save();
     }
 
-    private async Task LaunchClientAsync(string sessionId, string? serverArguments)
+    private async Task LaunchClientAsync(string sessionId, string? serverArguments, CharacterLaunchResponse? launch = null)
     {
         if (!Dx9Helper.IsInstalled())
         {
@@ -210,10 +242,21 @@ public partial class Login : Popup
 
         var launcherArguments = new List<string>
         {
-            $"Server={_server.Info.LoginServer}",
-            $"SessionId={sessionId}",
+            $"Server={launch?.Server ?? _server.Info.LoginServer}",
             $"Internationalization:Locale={Settings.Instance.Locale}"
         };
+
+        if (launch is not null)
+        {
+            // The retail path: the client connects straight in as this character rather
+            // than showing its own select screen.
+            launcherArguments.Add($"Guid={launch.Guid}");
+            launcherArguments.Add($"Ticket={launch.Ticket}");
+        }
+        else
+        {
+            launcherArguments.Add($"SessionId={sessionId}");
+        }
 
         if (!string.IsNullOrEmpty(serverArguments))
             launcherArguments.Add(serverArguments);

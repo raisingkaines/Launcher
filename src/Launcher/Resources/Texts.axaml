@@ -125,4 +125,8 @@
   <!-- Updates -->
   <x:String x:Key="Text.Main.UpdateAvailable" xml:space="preserve">Update {0} found, downloading...</x:String>
   <x:String x:Key="Text.Main.UpdatePortable" xml:space="preserve">This is the portable build, so it cannot update itself. Opening the downloads page.</x:String>
+
+  <!-- Character Select -->
+  <x:String x:Key="Text.CharacterSelect.Title" xml:space="preserve">Choose your character</x:String>
+  <x:String x:Key="Text.CharacterSelect.Starting" xml:space="preserve">Starting the game...</x:String>
 </ResourceDictionary>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<UserControl x:Class="Launcher.Views.CharacterSelect"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Launcher.ViewModels"
+             d:DesignHeight="300"
+             d:DesignWidth="620"
+             x:DataType="vm:CharacterSelect"
+             mc:Ignorable="d">
+
+  <Grid Width="600" Margin="6" RowDefinitions="Auto,*,Auto,Auto">
+
+    <!-- Header -->
+    <TextBlock Grid.Row="0"
+               HorizontalAlignment="Center"
+               FontFamily="{StaticResource FontDefault}"
+               FontSize="18"
+               Text="{StaticResource Text.CharacterSelect.Title}" />
+
+    <!-- Characters -->
+    <ScrollViewer Grid.Row="1"
+                  MaxHeight="240"
+                  Margin="0,12"
+                  HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Characters}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:CharacterCard">
+
+            <Button Margin="6"
+                    Padding="0"
+                    Classes="character"
+                    Command="{Binding $parent[ItemsControl].((vm:CharacterSelect)DataContext).ChooseCommand}"
+                    CommandParameter="{Binding}"
+                    Cursor="Hand">
+              <StackPanel Width="104" Orientation="Vertical">
+
+                <Panel Width="84" Height="84">
+                  <Border Background="#33FFFFFF"
+                          BorderBrush="{StaticResource Color.Border}"
+                          BorderThickness="1"
+                          CornerRadius="42" />
+
+                  <!-- Selection ring -->
+                  <Ellipse IsVisible="{Binding IsSelected}"
+                           Stroke="{StaticResource Color.Gold}"
+                           StrokeThickness="3" />
+
+                  <!-- Never played: no headshot has been uploaded yet -->
+                  <TextBlock HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             FontFamily="{StaticResource FontDefault}"
+                             FontSize="26"
+                             Foreground="{StaticResource Color.FG2}"
+                             IsVisible="{Binding Portrait, Converter={x:Static ObjectConverters.IsNull}}"
+                             Text="{Binding Initials}" />
+
+                  <Border ClipToBounds="True" CornerRadius="42">
+                    <Image Source="{Binding Portrait}" Stretch="UniformToFill" />
+                  </Border>
+                </Panel>
+
+                <TextBlock Margin="0,6,0,0"
+                           HorizontalAlignment="Center"
+                           FontFamily="{StaticResource FontDefault}"
+                           FontSize="13"
+                           Foreground="{StaticResource Color.FG1}"
+                           Text="{Binding Name}"
+                           TextAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           TextWrapping="Wrap" />
+              </StackPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <TextBlock Grid.Row="2"
+               HorizontalAlignment="Center"
+               FontFamily="{StaticResource FontDefault}"
+               FontSize="12"
+               Foreground="{StaticResource Color.FG2}"
+               IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+               Text="{Binding StatusMessage, Mode=OneWay}" />
+
+    <!-- Buttons -->
+    <StackPanel Grid.Row="3"
+                Margin="0,12,0,0"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="10">
+
+      <Button Classes="playimg"
+              Command="{Binding ConfirmCommand}"
+              Cursor="Hand"
+              IsEnabled="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Panel>
+          <Image Width="150" Source="/Assets/play.png" Stretch="Uniform" />
+          <Image Width="150"
+                 Classes="hover"
+                 Opacity="0"
+                 Source="/Assets/play_hover.png"
+                 Stretch="Uniform" />
+        </Panel>
+      </Button>
+
+      <Button Classes="flat primary"
+              Command="{Binding CancelCommand}"
+              Content="{StaticResource Text.Cancel}"
+              FontFamily="{StaticResource FontDefault}"
+              Padding="14,8" />
+    </StackPanel>
+  </Grid>
+</UserControl>

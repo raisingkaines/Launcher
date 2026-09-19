@@ -206,4 +206,18 @@
   <Style Selector="Button.playimg:disabled">
     <Setter Property="Opacity" Value="0.45" />
   </Style>
+  <!-- Character cards on the picker -->
+  <Style Selector="Button.character">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="4" />
+  </Style>
+  <Style Selector="Button.character /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <Style Selector="Button.character:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#22FFFFFF" />
+  </Style>
 </Styles>
