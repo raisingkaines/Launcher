@@ -70,10 +70,10 @@ launcher sends no account identifier and none is accepted.
 An account with no characters returns an empty array. The launcher then launches normally,
 so the player lands in character creation.
 
-## POST /characters/select
+## POST /characters/launch
 
 ```
-POST {WebApiUrl}/characters/select
+POST {WebApiUrl}/characters/launch
 Authorization: Bearer {sessionId}
 
 { "guid": "2065" }
@@ -81,44 +81,71 @@ Authorization: Bearer {sessionId}
 
 The server must **re-resolve the selection from scratch** rather than trusting the value:
 
-1. session token → user id
-2. `guid` → character id (rejecting a GUID whose type nibble is not the player type)
+1. session token -> user id
+2. `guid` -> character id (rejecting a GUID whose type nibble is not the player type)
 3. `SELECT ... WHERE UserId = {user} AND Id = {characterId}`
 
 That query is the authorization check. A GUID belonging to another account resolves to
-nothing and must be rejected, leaving the player at the normal in-game select screen -
-the same outcome as a server that never implemented this at all.
+nothing and must be rejected, leaving the player at the normal in-game select screen - the
+same outcome as a server that never implemented this at all.
 
-On success the server records the pending selection **against the session**, holding the
-already-resolved character, so the login server never re-reads a client-supplied value.
+On success the server does exactly what it already does when a player clicks a character
+in game: mint a ticket for that character, stamp `LastLogin`, and hand back where to
+connect.
+
+```json
+{
+  "server": "127.0.0.1:20260",
+  "guid": "2065",
+  "ticket": "0f8c1e10-3a6c-4f1b-9a1e-9d2b7c4f0a11"
+}
+```
 
 | Response | Meaning |
 | --- | --- |
-| `204` | Selection accepted; the client will be taken straight into the world |
+| `200` with the body above | Launch straight into the world as that character |
 | `403` / `404` | Not this account's character - launcher falls back to a normal launch |
 
-## Skipping the in-game select screen
+## How the client is told which character to load
 
-The launcher cannot do this on its own. The client's select screen is Scaleform UI driven
-by the client, and there is no command line argument that bypasses it - `--character=` in
-the binary belongs to the command line the client *builds* to launch the TCG module, not
-to one it accepts.
+This is not a new trick: it is how the retail website did it. The old SOE browser plugin
+built the client's command line from a fixed list of parameters returned by the ticket
+server:
 
-So the server does it. When a session has a pending selection, the login server performs
-the work `CharacterLoginRequestHandler` normally does on the player's click - mint a
-ticket, stamp `LastLogin`, reply with the gateway address - without waiting for the
-request.
+```js
+paramArr = ["Server", "Guid", "Ticket", "Internationalization:Locale",
+            "ShowMemberLoadingScreen", "Country", "key", "CasSessionId"];
+pluginCore.launchStr += paramArr[i] + "=" + resp.launchParams[paramArr[i]];
+```
 
-> **Unverified.** Whether the client acts on that reply while sitting on the select
-> screen, or ignores a packet it did not ask for, has not yet been tested. Everything
-> above is implementable regardless; this last step is what makes it seamless rather than
-> just a nicer picker.
+The website posted the chosen `characterId` to its ticket server, got back `launchParams`
+carrying that character's **`Guid`** and a **`Ticket`**, and launched the client with
+them. The client connected as that character with no select screen - login, pick a face,
+Play Now.
+
+Every one of those option names is present in the client binary (`Guid=%llu`,
+`ServerTicket=%s`, `CasSessionId`, `ShowMemberLoadingScreen`), so the launcher can do the
+same thing:
+
+```
+FreeRealms.exe Server={server} Guid={guid} Ticket={ticket} Internationalization:Locale={locale}
+```
+
+`Guid` is the character GUID - the value the account check above resolved, never one the
+launcher derived. Launching without `Guid`/`Ticket`, as the launcher does today, gives the
+normal in-game select screen, which is also the correct behaviour for an account with no
+characters: the player lands in character creation.
+
+> `--character=` in the client binary is **not** this mechanism. It belongs to the command
+> line the client *builds* to launch the TCG module, alongside `--post-login=tutorial` and
+> `FreeRealmsTCG.dll`. It is a red herring.
 
 ## Implementing it on a server
 
 1. Add the two endpoints, authenticated by the session your `/login` already issues.
 2. Resolve portraits server-side, checking every keying your store has used.
-3. Record pending selections against the session.
-4. Have the login server honour a pending selection.
+3. Have `/characters/launch` mint a ticket the same way your login server does when a
+   player picks a character in game, and return it with the gateway address.
 
-Steps 1-2 alone give the player a picker. Steps 3-4 are what remove the in-game screen.
+No change to the game client or to your login server's packet handling is needed - the
+client has supported this command line since retail.
