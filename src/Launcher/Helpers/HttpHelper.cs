@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -71,11 +72,41 @@ public static class HttpHelper
         return httpClient;
     }
 
+    /// <summary>
+    /// The system resolver first, falling back to DNS-over-HTTPS when it will not answer.
+    ///
+    /// Some ISPs filter or hijack DNS, which looks exactly like the server being down:
+    /// the rest of the connection is fine and the lookup is the only thing that fails.
+    /// Only the lookup moves - the connection, certificate check and SNI are unchanged.
+    /// </summary>
+    private static async Task<IPAddress[]> ResolveAsync(string host, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
+
+            if (addresses.Length > 0)
+                return addresses;
+
+            _logger.Warn("The system resolver returned nothing for '{Host}'; trying DNS-over-HTTPS.", host);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "The system resolver failed for '{Host}'; trying DNS-over-HTTPS.", host);
+        }
+
+        return await DnsFallback.ResolveAsync(host, cancellationToken).ConfigureAwait(false);
+    }
+
     private static async ValueTask<Stream> HappyEyeballsConnectAsync(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
     {
         var dnsEndPoint = context.DnsEndPoint;
 
-        var addresses = await Dns.GetHostAddressesAsync(dnsEndPoint.Host, cancellationToken).ConfigureAwait(false);
+        var addresses = await ResolveAsync(dnsEndPoint.Host, cancellationToken).ConfigureAwait(false);
 
         if (addresses.Length == 0)
         {
@@ -157,11 +188,73 @@ public static class HttpHelper
         }
     }
 
+    /// <summary>
+    /// Turns a failed connection into something a player can act on. "Offline" covers a
+    /// server that is genuinely down and a connection that is being interfered with, and
+    /// those need completely different things from whoever reads it.
+    /// </summary>
+    private static string DescribeConnectionFailure(string requestUri, Exception ex)
+    {
+        // The caller builds the url as a string; show just the host, which is the part
+        // that means anything to whoever is reading it.
+        var host = Uri.TryCreate(requestUri, UriKind.Absolute, out var parsed) ? parsed.Host : requestUri;
+
+        var socket = ex as SocketException ?? ex.InnerException as SocketException;
+
+        if (socket is not null)
+        {
+            switch (socket.SocketErrorCode)
+            {
+                case SocketError.HostNotFound:
+                case SocketError.NoData:
+                case SocketError.TryAgain:
+                    return $"Could not look up {host}. The address would not resolve, even through "
+                         + "a public resolver, which usually means the network or its DNS is blocking it. "
+                         + "A different DNS server, or a VPN, normally gets past this.";
+
+                case SocketError.ConnectionRefused:
+                    return $"{host} refused the connection. The server may be down.";
+
+                case SocketError.TimedOut:
+                case SocketError.NetworkUnreachable:
+                case SocketError.HostUnreachable:
+                    return $"Could not reach {host}. The connection timed out, which can mean the "
+                         + "server is down or that something on the network is blocking it.";
+            }
+        }
+
+        if (ex is AuthenticationException || ex.InnerException is AuthenticationException)
+        {
+            return $"The secure connection to {host} could not be established. Something on the "
+                 + "network may be intercepting it.";
+        }
+
+        if (ex is TaskCanceledException or OperationCanceledException)
+            return $"{host} did not answer in time.";
+
+        return $"Could not reach {host}: {ex.Message}";
+    }
+
     public static async Task<(ManifestResult Result, string Error, ServerManifest? ServerManifest)> GetServerManifestAsync(string serverUrl)
     {
         var serverManifestUri = UriHelper.JoinUriPaths(serverUrl, ServerManifest.FileName.ToLower());
 
-        var response = await _httpClient.GetAsync(serverManifestUri);
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await _httpClient.GetAsync(serverManifestUri);
+        }
+        catch (Exception ex)
+        {
+            // Reaching the server failed outright, which is not the same as the server
+            // being down - and the difference is what someone needs in order to fix it.
+            var error = DescribeConnectionFailure(serverManifestUri, ex);
+
+            _logger.Error(ex, "Could not reach '{Uri}'.", serverManifestUri);
+
+            return (ManifestResult.NetworkError, error, null);
+        }
 
         if (!response.IsSuccessStatusCode)
         {
