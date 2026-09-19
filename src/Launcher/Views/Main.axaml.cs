@@ -1,13 +1,26 @@
+using System;
 using System.Linq;
 
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using Avalonia.Threading;
+
+using Launcher.Helpers;
+
+using NLog;
 
 namespace Launcher.Views;
 
 public partial class Main : Window
 {
+    private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+
+    /// <summary>Wide enough for the window at a high DPI, far short of the full picture.</summary>
+    private const int BackdropDecodeWidth = 1400;
+
     public readonly ViewModels.Main ViewModel = new();
 
     public Main()
@@ -20,7 +33,102 @@ public partial class Main : Window
     protected override void OnLoaded(RoutedEventArgs e)
     {
         ViewModel.OnLoad();
+
+        StartBackdropRotation();
     }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _backdropTimer.Stop();
+        _backdropTimer.Tick -= OnBackdropTick;
+
+        base.OnClosed(e);
+    }
+
+    /// <summary>
+    /// The pictures behind the launcher, in the order they cycle. The first one is what
+    /// the window opens on.
+    /// </summary>
+    private static readonly string[] _backdrops =
+    [
+        "avares://Launcher/Assets/background.png",
+        "avares://Launcher/Assets/backgrounds/seaside_sunset.jpg",
+        "avares://Launcher/Assets/backgrounds/merryvale.jpg",
+        "avares://Launcher/Assets/backgrounds/sanctuary_cherrytree.jpg",
+        "avares://Launcher/Assets/backgrounds/highroad.jpg",
+        "avares://Launcher/Assets/backgrounds/crossroads.jpg",
+        "avares://Launcher/Assets/backgrounds/sanctuary_bigtree.jpg",
+        "avares://Launcher/Assets/backgrounds/highroad_party.jpg",
+        "avares://Launcher/Assets/backgrounds/sanctuary.jpg",
+    ];
+
+    private readonly DispatcherTimer _backdropTimer = new() { Interval = Constants.BackdropInterval };
+
+    private int _backdropIndex;
+
+    /// <summary>Which of the two layers is the one currently showing.</summary>
+    private bool _backdropOnB;
+
+    private void StartBackdropRotation()
+    {
+        if (_backdrops.Length < 2)
+            return;
+
+        _backdropTimer.Tick += OnBackdropTick;
+        _backdropTimer.Start();
+    }
+
+    /// <summary>
+    /// Fades the next picture in over the one showing. Nothing here is worth an error in
+    /// front of the player: a picture that will not load is skipped and the rotation
+    /// carries on with the next one.
+    /// </summary>
+    private void OnBackdropTick(object? sender, EventArgs e)
+    {
+        for (var attempt = 0; attempt < _backdrops.Length; attempt++)
+        {
+            _backdropIndex = (_backdropIndex + 1) % _backdrops.Length;
+
+            var next = TryLoadBackdrop(_backdrops[_backdropIndex]);
+
+            if (next is null)
+                continue;
+
+            var incoming = _backdropOnB ? BackdropA : BackdropB;
+            var outgoing = _backdropOnB ? BackdropB : BackdropA;
+
+            incoming.Source = next;
+            incoming.Opacity = 1;
+            outgoing.Opacity = 0;
+
+            _backdropOnB = !_backdropOnB;
+
+            return;
+        }
+
+        // Every picture failed, so there is nothing left to rotate through.
+        _backdropTimer.Stop();
+        _logger.Warn("No usable background pictures; stopping the rotation.");
+    }
+
+    private Bitmap? TryLoadBackdrop(string uri)
+    {
+        try
+        {
+            using var stream = AssetLoader.Open(new Uri(uri));
+
+            // Decoded to roughly what the window can show rather than full size, so the
+            // two layers alive at once stay cheap.
+            return Bitmap.DecodeToWidth(stream, BackdropDecodeWidth);
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Could not load the background '{Uri}'.", uri);
+
+            return null;
+        }
+    }
+
 
     /// <summary>
     /// The window draws its own title bar, so dragging it has to be wired up by hand.

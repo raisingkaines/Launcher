@@ -27,6 +27,12 @@ public static class Constants
     /// </summary>
     public static readonly TimeSpan ServerStatusRefreshInterval = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// How long each background picture is held before the next one fades in. Long
+    /// enough not to be busy while someone reads the server list.
+    /// </summary>
+    public static readonly TimeSpan BackdropInterval = TimeSpan.FromSeconds(11);
+
     public static readonly string LogsDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
 
     /// <summary>

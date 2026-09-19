@@ -25,6 +25,14 @@
 
   <Window.Styles>
     <!-- The rail opens only while the pointer is within its own bounds. -->
+    <Style Selector="Image.backdrop">
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:1.6" Easing="SineEaseInOut" />
+        </Transitions>
+      </Setter>
+    </Style>
+
     <Style Selector="Border.serverRail">
       <Setter Property="Width" Value="0" />
       <Setter Property="Transitions">
@@ -88,10 +96,22 @@
 
       <Grid Grid.Row="1" ColumnDefinitions="0,*">
 
-        <!-- Artwork -->
-        <Image Grid.Column="0"
+        <!-- Artwork.
+             Two layers that cross-fade. The timer points whichever one is invisible at the
+             next picture and then swaps the two opacities; the transition below does the
+             fade, so both the outgoing and incoming halves are one assignment each. -->
+        <Image x:Name="BackdropA"
+               Grid.Column="0"
                Grid.ColumnSpan="2"
+               Classes="backdrop"
                Source="/Assets/background.png"
+               Stretch="UniformToFill" />
+
+        <Image x:Name="BackdropB"
+               Grid.Column="0"
+               Grid.ColumnSpan="2"
+               Classes="backdrop"
+               Opacity="0"
                Stretch="UniformToFill" />
 
         <!-- Just enough shade at the bottom for the card to read -->
