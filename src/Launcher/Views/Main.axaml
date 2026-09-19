@@ -123,7 +123,8 @@
                   HorizontalAlignment="Left"
                   Background="Transparent" />
 
-          <Border HorizontalAlignment="Left"
+          <Border x:Name="ServerRail"
+                  HorizontalAlignment="Left"
                   Background="{StaticResource Color.Server}"
                   ClipToBounds="True"
                   Classes="serverRail">
@@ -294,8 +295,16 @@
           </Border>
         </Panel>
 
-        <!-- Hero -->
-        <Grid Grid.Column="1" RowDefinitions="Auto,*">
+        <!-- Hero.
+             The spacer tracks the rail's live width, so everything here re-centres in
+             whatever room is left rather than being cut into when the rail opens - the
+             welcome card sat at 240..780 and the rail reached 330. It follows the width
+             animation for free, because that is what it is bound to. -->
+        <Grid Grid.Column="1" ColumnDefinitions="Auto,*">
+
+          <Border Width="{Binding #ServerRail.Bounds.Width}" IsHitTestVisible="False" />
+
+          <Grid Grid.Column="1" RowDefinitions="Auto,*">
 
           <Image Grid.Row="0"
                  Width="330"
@@ -327,6 +336,7 @@
           <v:Server Grid.Row="1"
                     DataContext="{Binding ActiveServer, Mode=TwoWay}"
                     IsVisible="{Binding $parent[Window].((vm:Main)DataContext).ActiveServer, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          </Grid>
         </Grid>
 
         <!-- Popups -->
