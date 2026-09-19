@@ -31,8 +31,10 @@ public partial class CharacterCard : ObservableObject
     public required CharacterInfo Info { get; init; }
 
     /// <summary>
-    /// The "create one" tile rather than a real character. Choosing it launches the way
-    /// the launcher always did, so the client shows its own creation flow.
+    /// The add-a-character tile rather than a real character. Choosing it launches with
+    /// no Guid or Ticket, which lands on the in-game select screen - where Add a
+    /// Character lives. The client has no launch option for jumping straight to the
+    /// creator; it decides from what the login server reports.
     /// </summary>
     public bool IsNewCharacter { get; init; }
 
@@ -78,8 +80,8 @@ public partial class CharacterSelect : Popup
 
         Selected = Characters.FirstOrDefault();
 
-        // Without this an account that already has characters could never make another:
-        // the picker replaces the in-game select screen, which is where you used to do it.
+        // Without this an account that already has characters could never reach the
+        // in-game select screen, which is where characters are added.
         Characters.Add(new CharacterCard
         {
             IsNewCharacter = true,
@@ -137,8 +139,7 @@ public partial class CharacterSelect : Popup
         if (Selected is null)
             return true;
 
-        // Launch with no character so the client shows its own flow, which is where
-        // characters are created.
+        // Launch with no character so the client shows the select screen.
         if (Selected.IsNewCharacter)
         {
             StatusMessage = App.GetText("Text.CharacterSelect.Creating");
