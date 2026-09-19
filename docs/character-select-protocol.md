@@ -234,10 +234,76 @@ down the whole list against a server that will not take any of them.
 
 ## Implementing it on a server
 
-1. Add the two endpoints, authenticated by the session your `/login` already issues.
+Each endpoint stands on its own. `/characters` alone already gets you the picker; add the
+others when you want them.
+
+1. Add `GET /characters` and `POST /characters/launch`, authenticated by the session your
+   `/login` already issues.
 2. Resolve portraits server-side, checking every keying your store has used.
 3. Have `/characters/launch` mint a ticket the same way your login server does when a
    player picks a character in game, and return it with the gateway address.
 
-No change to the game client or to your login server's packet handling is needed - the
-client has supported this command line since retail.
+Those two need **no change to the game client and none to your login server** - the client
+has supported that command line since retail, and handing it a guid and ticket bypasses the
+login handshake entirely.
+
+Character creation is the exception, and it is worth being clear about why.
+
+## Implementing character creation
+
+`POST /characters/create` **cannot** be done in the web layer alone. The client decides
+between the creator and the select screen from one value, `CharacterSelectInfoReply.Status`,
+which your login server sets from `characters.Count == 0`. No launch argument reaches it:
+the client's whole option table is `SessionId`, `Guid`, `CasSessionId`, `Ticket` and
+`Server`, and none of them touch character select.
+
+So the launcher asks, and the login server answers the next character-select request as
+though the account were empty. Two pieces, and `docs/reference/` has both:
+
+| File | Where it runs |
+| --- | --- |
+| `characters-create.mjs` | beside your `/login`; authenticates the session and raises the request |
+| `CharacterCreateRequests.cs` | in your login server; consumes it |
+
+They agree on one thing only - a directory - so the web process never has to talk to the
+login server.
+
+### The login server change
+
+If you build your login server from source this is two lines. In
+`CharacterSelectInfoRequestHandler`, right after the characters are read:
+
+```csharp
+var characters = dbContext.Characters
+    .AsNoTracking()
+    .Where(x => x.UserId == connection.UserId)
+    // ...
+    .ToList();
+
+if (CharacterCreateRequests.Consume(connection.UserId))
+    characters.Clear();
+
+characterSelectInfoReply.Status = characters.Count == 0 ? 2 : 1;
+```
+
+Clearing the list rather than setting `Status` directly is deliberate: everything after it
+already follows from the list, so the reply stays consistent and no other branch has to know
+this feature exists.
+
+Running a binary you cannot rebuild, the same call can be injected into the compiled handler
+with a library like dnlib. That is how Server 1 does it, and it works, but it is a great deal
+more effort for the same two lines - and the injected assembly also has to be registered in
+the app's `.deps.json`, or the patched method throws `FileNotFoundException` on every
+character-select request and nobody can log in. Rebuild from source if you possibly can.
+
+### Testing it
+
+The request is spent on the next character-select request and expires after five minutes,
+so the whole thing is observable:
+
+- call `POST /characters/create` with a valid session, and a `<userId>.flag` file appears
+- log in, and it is gone, and the creator is what you land on
+- leave it more than five minutes and it is ignored, then cleaned up on the next login
+
+A server that skips this endpoint answers `404`, the launcher launches normally, and the
+player lands on the in-game select screen exactly as before.
