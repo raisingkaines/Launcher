@@ -23,6 +23,7 @@ namespace Launcher.ViewModels;
 public partial class CharacterCard : ObservableObject
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowUnknown))]
     private Bitmap? portrait;
 
     [ObservableProperty]
@@ -37,6 +38,11 @@ public partial class CharacterCard : ObservableObject
     public bool IsNewCharacter { get; init; }
 
     public string Name => Info.Name;
+
+    /// <summary>
+    /// A real character with no headshot yet - the website showed a "?" tile for these.
+    /// </summary>
+    public bool ShowUnknown => !IsNewCharacter && Portrait is null;
 
     /// <summary>
     /// Shown in place of a headshot for a character who has never played.

@@ -53,24 +53,24 @@
                            Stroke="{StaticResource Color.Gold}"
                            StrokeThickness="3" />
 
-                  <!-- Never played: no headshot has been uploaded yet -->
-                  <TextBlock HorizontalAlignment="Center"
-                             VerticalAlignment="Center"
-                             FontFamily="{StaticResource FontDefault}"
-                             FontSize="26"
-                             Foreground="{StaticResource Color.FG2}"
-                             IsVisible="{Binding Portrait, Converter={x:Static ObjectConverters.IsNull}}"
-                             Text="{Binding Initials}" />
 
-                  <!-- The create-one tile -->
-                  <Path Width="26"
-                        Height="26"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Data="{StaticResource Icons.Add}"
-                        Fill="{StaticResource Color.Gold}"
-                        IsVisible="{Binding IsNewCharacter}"
-                        Stretch="Uniform" />
+                  <!-- No headshot yet: the placeholder the website used -->
+                  <Image Width="52"
+                         Height="52"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding ShowUnknown}"
+                         Source="/Assets/char_unknown.png"
+                         Stretch="Uniform" />
+
+                  <!-- Create a character - the website's own icon -->
+                  <Image Width="52"
+                         Height="52"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding IsNewCharacter}"
+                         Source="/Assets/char_new.png"
+                         Stretch="Uniform" />
 
                   <Border ClipToBounds="True" CornerRadius="42">
                     <Image Source="{Binding Portrait}" Stretch="UniformToFill" />
