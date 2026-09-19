@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -186,6 +187,65 @@ public static class CharacterApi
             _logger.Warn(ex, "Could not request character creation from '{Url}'.", webApiUrl);
 
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Sends a headshot the game client captured to the server, for one character.
+    /// Returns false when the server will not take it, which is never worth interrupting
+    /// the player over.
+    /// </summary>
+    public static async Task<bool> TryUploadPortraitAsync(
+        string webApiUrl, string sessionId, string guid, string pngPath,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!TryBuildUri(webApiUrl, $"characters/{Uri.EscapeDataString(guid)}/portrait", out var uri))
+                return false;
+
+            byte[] png;
+
+            try
+            {
+                png = await File.ReadAllBytesAsync(pngPath, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn(ex, "Could not read the captured headshot '{Path}'.", pngPath);
+
+                return false;
+            }
+
+            if (png.Length == 0)
+                return false;
+
+            using var content = new ByteArrayContent(png);
+            content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = content };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sessionId);
+
+            using var response = await HttpHelper.CreateHttpClient()
+                .SendAsync(request, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // 404 just means this server does not know the character, and 501/404 on the
+                // route means it has not implemented portraits. Neither is an error here.
+                _logger.Warn("Portrait upload returned {Status} for guid {Guid}.", response.StatusCode, guid);
+
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Could not upload a portrait to '{Url}'.", webApiUrl);
+
+            return false;
         }
     }
 

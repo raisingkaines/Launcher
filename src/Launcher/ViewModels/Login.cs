@@ -187,6 +187,10 @@ public partial class Login : Popup
             return;
         }
 
+        // The client captured these on previous logins and never sent them. Do it in the
+        // background: a portrait is not worth making the player wait.
+        _ = Task.Run(() => PortraitSync.SyncAsync(_server.Info, loginResponse.SessionId, characters));
+
         var characterSelect = new CharacterSelect(
             _server,
             loginResponse.SessionId,
