@@ -76,6 +76,9 @@ public partial class Server : ObservableObject
     [ObservableProperty]
     private bool isNewsVisible;
 
+    [ObservableProperty]
+    private bool isInstalled;
+
     /// <summary>
     /// Set while the rail fills in every server status at startup, so servers that happen
     /// to be down do not greet the player with a stack of error toasts.
@@ -127,6 +130,26 @@ public partial class Server : ObservableObject
     [RelayCommand]
     private void ToggleNews() => IsNewsVisible = !IsNewsVisible;
 
+    /// <summary>
+    /// Whether this server's client has been downloaded, which decides whether the card
+    /// offers Download or Play Now.
+    /// </summary>
+    public void UpdateInstalledState()
+    {
+        try
+        {
+            var executable = Path.Combine(InstallPaths.GetClientPath(Info), Constants.ClientExecutableName);
+
+            IsInstalled = File.Exists(executable);
+        }
+        catch (Exception ex)
+        {
+            _logger.Debug(ex, "Could not tell whether the client is installed for: {Name}.", Info.Name);
+
+            IsInstalled = false;
+        }
+    }
+
     partial void OnStatusChanged(string value)
     {
         if (string.IsNullOrWhiteSpace(Subtitle) || Subtitle == value)
@@ -165,6 +188,7 @@ public partial class Server : ObservableObject
         MarkdownBuilder.Append(Info.Description);
 
         UpdateWelcome();
+        UpdateInstalledState();
 
         await RefreshCommand.ExecuteAsync(null);
 
@@ -271,6 +295,8 @@ public partial class Server : ObservableObject
     {
         // Before the manifest has been read we do not know where to ping, and a silent
         // refresh should not flip a server to offline over that.
+        UpdateInstalledState();
+
         if (quiet && string.IsNullOrEmpty(Info.LoginServer))
             return;
 
@@ -313,37 +339,61 @@ public partial class Server : ObservableObject
     }
 
     [RelayCommand(AllowConcurrentExecutions = false)]
+    public async Task DownloadAsync()
+    {
+        if (await EnsureClientAsync())
+            App.AddNotification($"{Info.Name} is ready to play.");
+    }
+
+    [RelayCommand(AllowConcurrentExecutions = false)]
     public async Task PlayAsync()
     {
         if (Process != null)
         {
             App.AddNotification("Unable to launch, the game is already open.", true);
 
-            _logger.Warn("Unable to launch, the game is already open for server: '{Name}'.", Info.Name);
+            _logger.Warn("Unable to launch, the game is already open for server: {Name}.", Info.Name);
 
             return;
         }
 
-        if (!string.IsNullOrEmpty(Info.Url))
-        {
-        var clientManifest = await GetClientManifestAsync();
-
-        if (clientManifest is null)
+        if (!await EnsureClientAsync())
             return;
 
-        StatusMessage = App.GetText("Text.Server.VerifyClientFiles");
-
-        if (!await VerifyClientFilesAsync(clientManifest))
+        if (!IsOnline)
         {
-            StatusMessage = string.Empty;
+            App.AddNotification("Unable to login, the server is offline.", true);
 
-                return;
-            }
+            return;
+        }
+
+        // All checks passed, show the login popup
+        App.ShowPopup(new Login(this));
+    }
+
+    /// <summary>
+    /// Makes sure the client is present and current, fetching whatever is missing.
+    /// Shared by Download and Play, so pressing either one leaves the server playable.
+    /// </summary>
+    private async Task<bool> EnsureClientAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(Info.Url))
+                return true;
+
+            var clientManifest = await GetClientManifestAsync();
+
+            if (clientManifest is null)
+                return false;
+
+            StatusMessage = App.GetText("Text.Server.VerifyClientFiles");
+
+            if (!await VerifyClientFilesAsync(clientManifest))
+                return false;
 
             if (!clientManifest.Languages.Contains(Settings.Instance.Locale))
             {
-                StatusMessage = string.Empty;
-
                 var selectedLanguage = Locale.LocaleMap[Settings.Instance.Locale];
                 var supportedLanguages = clientManifest.Languages.Select(l => Locale.LocaleMap[l]);
 
@@ -354,23 +404,17 @@ public partial class Server : ObservableObject
                                      {string.Join(Environment.NewLine, supportedLanguages)}
                                      """, true);
 
-            return;
-        }
-        }
+                return false;
+            }
 
-        if (!IsOnline)
+            return true;
+        }
+        finally
         {
             StatusMessage = string.Empty;
 
-            App.AddNotification("Unable to login, the server is offline.", true);
-
-            return;
+            UpdateInstalledState();
         }
-
-        StatusMessage = string.Empty;
-
-        // All checks passed, show the login popup
-        App.ShowPopup(new Login(this));
     }
 
     [RelayCommand]

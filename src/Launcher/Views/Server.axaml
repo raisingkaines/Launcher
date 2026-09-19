@@ -136,14 +136,44 @@
             </StackPanel>
           </StackPanel>
 
-          <!-- Play -->
+          <!-- Download, until the client is on disk -->
+          <Button Grid.Column="1"
+                  VerticalAlignment="Center"
+                  Classes="playimg"
+                  Command="{Binding DownloadCommand}"
+                  Cursor="Hand"
+                  IsEnabled="{Binding IsEnabled}">
+            <Button.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="!IsInstalled" />
+                <Binding Path="!DownloadCommand.IsRunning" />
+                <Binding Path="!PlayCommand.IsRunning" />
+              </MultiBinding>
+            </Button.IsVisible>
+            <Panel>
+              <Image Width="166" Source="/Assets/download.png" Stretch="Uniform" />
+              <Image Width="166"
+                     Classes="hover"
+                     Opacity="0"
+                     Source="/Assets/download_hover.png"
+                     Stretch="Uniform" />
+            </Panel>
+          </Button>
+
+          <!-- Play, once it is -->
           <Button Grid.Column="1"
                   VerticalAlignment="Center"
                   Classes="playimg"
                   Command="{Binding PlayCommand}"
                   Cursor="Hand"
-                  IsEnabled="{Binding IsEnabled}"
-                  IsVisible="{Binding PlayCommand.IsRunning, Converter={x:Static BoolConverters.Not}}">
+                  IsEnabled="{Binding IsEnabled}">
+            <Button.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="IsInstalled" />
+                <Binding Path="!DownloadCommand.IsRunning" />
+                <Binding Path="!PlayCommand.IsRunning" />
+              </MultiBinding>
+            </Button.IsVisible>
             <Panel>
               <Image Width="166" Source="/Assets/play.png" Stretch="Uniform" />
               <Image Width="166"
@@ -154,10 +184,13 @@
             </Panel>
           </Button>
 
-          <Border Grid.Column="1"
-                  MinWidth="166"
-                  Height="50"
-                  IsVisible="{Binding PlayCommand.IsRunning}">
+          <Border Grid.Column="1" MinWidth="166" Height="50">
+            <Border.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                <Binding Path="DownloadCommand.IsRunning" />
+                <Binding Path="PlayCommand.IsRunning" />
+              </MultiBinding>
+            </Border.IsVisible>
             <Path Width="24"
                   Height="24"
                   Classes="rotating"
