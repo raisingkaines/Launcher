@@ -139,10 +139,15 @@ public partial class CharacterSelect : Popup
         if (Selected is null)
             return true;
 
-        // Launch with no character so the client shows the select screen.
         if (Selected.IsNewCharacter)
         {
             StatusMessage = App.GetText("Text.CharacterSelect.Creating");
+
+            // Ask the server to send this account to the creator, then launch with no
+            // character so the client goes through the normal login path. The creator is
+            // only reachable that way: it is shown when the login server reports the
+            // account as empty, which no launch argument can do.
+            await CharacterApi.TryRequestCharacterCreationAsync(_server.Info.WebApiUrl, _sessionId);
 
             await _launchAsync(null);
 

@@ -134,6 +134,62 @@ public static class CharacterApi
     }
 
     /// <summary>
+    /// Asks the server to send this account to the in-game character creator on the next
+    /// login, and returns what it said. Null means the server would not, or could not,
+    /// which just means launching normally and landing on the in-game select screen.
+    ///
+    /// The creator cannot be reached with a launch argument - the client decides between
+    /// the creator and the select screen purely from what the login server reports - so
+    /// this has to be asked for before the game starts, and the game then has to be
+    /// launched through the normal login path rather than straight into a character.
+    /// </summary>
+    public static async Task<CharacterCreateResponse?> TryRequestCharacterCreationAsync(
+        string webApiUrl, string sessionId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!TryBuildUri(webApiUrl, "characters/create", out var uri))
+                return null;
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, uri);
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sessionId);
+
+            using var response = await HttpHelper.CreateHttpClient()
+                .SendAsync(request, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // 501 is a server that has not implemented this; anything else is a
+                // refusal. Either way the launch still happens, just without the creator.
+                _logger.Warn("Character create request returned {Status}.", response.StatusCode);
+
+                return null;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<CharacterCreateResponse>(cancellationToken);
+
+            if (result is null || !result.Ok)
+            {
+                _logger.Warn("Character create request was not acknowledged.");
+
+                return null;
+            }
+
+            if (!result.HookInstalled)
+                _logger.Warn("Server accepted the character create request but has no login patch installed.");
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Could not request character creation from '{Url}'.", webApiUrl);
+
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Downloads a headshot. The URL comes from the server; the launcher never builds one.
     /// </summary>
     public static async Task<byte[]?> TryGetPortraitAsync(

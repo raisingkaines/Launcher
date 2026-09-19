@@ -106,6 +106,51 @@ connect.
 | `200` with the body above | Launch straight into the world as that character |
 | `403` / `404` | Not this account's character - launcher falls back to a normal launch |
 
+## POST /characters/create
+
+Optional. Asks the server to send this account to the in-game character creator on its
+next login, for the launcher's "Add a Character" tile.
+
+```
+POST /characters/create
+Authorization: Bearer <sessionId>
+```
+
+```json
+{ "ok": true, "hookInstalled": true }
+```
+
+`hookInstalled` reports whether the login server can actually act on the request. A server
+that accepted the request but cannot honour it should return `true`/`false` honestly rather
+than implying success: the launcher launches either way, and `false` simply means the player
+lands on the in-game select screen.
+
+A server that has not implemented this answers `501`. The launcher treats any failure the
+same way - it launches normally - so the tile still works, it just does not reach the
+creator.
+
+After a success the launcher **launches with the server's own arguments**, not the
+`Guid`/`Ticket` pair from `/characters/launch`. That is deliberate and it is the whole
+reason this endpoint exists.
+
+### Why an endpoint is needed at all
+
+The creator cannot be reached with a launch argument. The client's full option table is
+`SessionId`, `Guid`, `CasSessionId`, `Ticket` and `Server`, plus four ini file overrides,
+and none of them concern character select. The client decides between the creator and the
+select screen from one thing only: `CharacterSelectInfoReply.Status`, which the login
+server sets to `2` when the account has no characters and `1` otherwise.
+
+So the only way in is for the login server to answer as though the account were empty.
+Launching straight into the gateway with a guid and ticket skips the login handshake
+entirely, which is why the creator is unreachable that way - the request that would carry
+`Status` is never sent.
+
+How a server arranges that is its own business. Server 1 does it by writing a short-lived,
+single-use flag for the account, which a patched login server consumes on the next
+character-select request; the flag expires after five minutes so an abandoned launch cannot
+strand the account on the creation screen.
+
 ## How the client is told which character to load
 
 This is not a new trick: it is how the retail website did it. The old SOE browser plugin

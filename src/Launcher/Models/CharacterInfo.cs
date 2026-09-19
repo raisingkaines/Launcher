@@ -57,3 +57,18 @@ public sealed class CharacterLaunchResponse
 
     public string? Ticket { get; set; }
 }
+
+/// <summary>
+/// The answer to a request to be sent to the in-game character creator.
+/// </summary>
+public sealed class CharacterCreateResponse
+{
+    public bool Ok { get; set; }
+
+    /// <summary>
+    /// Whether the login server can actually act on the request. False means the server
+    /// accepted it but has no character-create patch installed, so the client will land
+    /// on the in-game select screen instead.
+    /// </summary>
+    public bool HookInstalled { get; set; }
+}
