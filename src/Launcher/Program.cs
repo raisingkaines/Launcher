@@ -22,6 +22,11 @@ internal sealed class Program
     [STAThread]
     internal static void Main(string[] args)
     {
+        // Must be the first thing that runs. Velopack handles the install, update and
+        // uninstall hooks here and then exits, so nothing else should touch disk or
+        // start services before it has had its turn.
+        VelopackApp.Build().Run();
+
         SetupNLog();
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -38,8 +43,6 @@ internal sealed class Program
 
     internal static AppBuilder BuildAvaloniaApp()
     {
-        VelopackApp.Build().Run();
-
         var builder = AppBuilder.Configure<App>()
             .WithInterFont()
             .UsePlatformDetect();
