@@ -21,7 +21,7 @@
 
     <!-- Characters -->
     <ScrollViewer Grid.Row="1"
-                  MaxHeight="240"
+                  MaxHeight="310"
                   Margin="0,12"
                   HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">
@@ -44,7 +44,7 @@
 
                 <!-- The site's own tiles are the frame, so the photo sits on top of one
                      rather than being clipped into a circle. -->
-                <Panel Width="92" Height="78" HorizontalAlignment="Center">
+                <Panel Width="88" Height="88" HorizontalAlignment="Center">
 
                   <Image IsVisible="{Binding !IsNewCharacter}"
                          Source="/Assets/char_unknown.png"
@@ -55,8 +55,8 @@
                          Stretch="Uniform" />
 
                   <!-- Covers the "?" when the character has a headshot -->
-                  <Image Width="64"
-                         Height="64"
+                  <Image Width="62"
+                         Height="62"
                          HorizontalAlignment="Center"
                          VerticalAlignment="Center"
                          Source="{Binding Portrait}"
@@ -69,11 +69,14 @@
                           IsVisible="{Binding IsSelected}" />
                 </Panel>
 
-                <TextBlock Margin="0,6,0,0"
+                <TextBlock Height="34"
+                           Margin="0,6,0,0"
                            HorizontalAlignment="Center"
+                           VerticalAlignment="Top"
                            FontFamily="{StaticResource FontDefault}"
                            FontSize="13"
                            Foreground="{StaticResource Color.FG1}"
+                           MaxLines="2"
                            Text="{Binding Name}"
                            TextAlignment="Center"
                            TextTrimming="CharacterEllipsis"
