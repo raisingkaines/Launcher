@@ -48,15 +48,6 @@
       <Setter Property="BoxShadow" Value="6 0 18 0 #66000000" />
     </Style>
 
-    <!-- The inset, rounded chrome is what makes the window look like it floats. Full
-         screen has no desktop to float over, and a 6px margin there would only show the
-         desktop through the edges. -->
-    <Style Selector="Window:fullscreen Border#WindowChrome">
-      <Setter Property="Margin" Value="0" />
-      <Setter Property="CornerRadius" Value="0" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="BoxShadow" Value="none" />
-    </Style>
   </Window.Styles>
 
   <Design.DataContext>

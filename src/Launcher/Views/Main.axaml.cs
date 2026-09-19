@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -37,6 +38,18 @@ public partial class Main : Window
     private double _designWidth;
 
     private double _designHeight;
+
+    /// <summary>
+    /// The windowed chrome, kept so full screen can strip it and put it back. The inset
+    /// margin, rounded corners and shadow only make sense with a desktop behind them.
+    /// </summary>
+    private IBrush? _windowedBackground;
+
+    private Thickness _windowedMargin;
+
+    private CornerRadius _windowedCorner;
+
+    private Thickness _windowedBorder;
 
     public Main()
     {
@@ -183,6 +196,11 @@ public partial class Main : Window
             WindowState = WindowState.Normal;
 
             TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
+            Background = _windowedBackground;
+            WindowChrome.Margin = _windowedMargin;
+            WindowChrome.CornerRadius = _windowedCorner;
+            WindowChrome.BorderThickness = _windowedBorder;
+
             Width = _normalWidth;
             Height = _normalHeight;
             CanResize = false;
@@ -196,6 +214,14 @@ public partial class Main : Window
         Width = double.NaN;
         Height = double.NaN;
         TransparencyLevelHint = [WindowTransparencyLevel.None];
+
+        // Changing the hint alone does not make the surface opaque once the window is up:
+        // the window itself is painted Transparent so the rounded corners can show the
+        // desktop, and that is what was letting other windows through. Paint it instead.
+        Background = WindowChrome.Background;
+        WindowChrome.Margin = new Thickness(0);
+        WindowChrome.CornerRadius = new CornerRadius(0);
+        WindowChrome.BorderThickness = new Thickness(0);
 
         WindowState = WindowState.FullScreen;
         ApplyUiScale();
