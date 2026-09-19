@@ -19,19 +19,25 @@ import tarfile
 import time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-PUBLISH = os.path.join(ROOT, "publish-linux")
-ICON = os.path.join(ROOT, "assets", "logo.png")
-OUT_DIR = os.path.join(ROOT, "releases-linux")
+
+# Defaults suit a local build; CI passes its own, since the build scripts publish to
+# ./publish and stage everything in ./releases for the release job to collect.
+#   build-deb.py [version] [publishDir] [outDir] [arch]
+VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.3.0"
+PUBLISH = os.path.abspath(sys.argv[2]) if len(sys.argv) > 2 else os.path.join(ROOT, "publish-linux")
+OUT_DIR = os.path.abspath(sys.argv[3]) if len(sys.argv) > 3 else os.path.join(ROOT, "releases-linux")
+ARCH = sys.argv[4] if len(sys.argv) > 4 else "amd64"
+
+ICON = os.path.join(ROOT, "assets", "icon.png")
 
 PACKAGE = "freerealmslegacy"
-VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.3.0"
 INSTALL_DIR = "/opt/" + PACKAGE
 
 CONTROL = f"""Package: {PACKAGE}
 Version: {VERSION}
 Section: games
 Priority: optional
-Architecture: amd64
+Architecture: {{arch}}
 Maintainer: Raising Kaines <noreply@raisingkaines.com>
 Depends: wine
 Recommends: wine32
@@ -220,7 +226,7 @@ def main():
     installed_kb = max(1, stats.get("size", 0) // 1024)
 
     def build_control(tar):
-        add_file(tar, "./control", CONTROL.format(installed_size=installed_kb), 0o644)
+        add_file(tar, "./control", CONTROL.format(installed_size=installed_kb, arch=ARCH), 0o644)
         add_file(tar, "./postinst", POSTINST, 0o755)
 
     control_tar = targz(build_control)
@@ -230,7 +236,7 @@ def main():
     deb += ar_member("control.tar.gz", control_tar)
     deb += ar_member("data.tar.gz", data_tar)
 
-    out = os.path.join(OUT_DIR, f"{PACKAGE}_{VERSION}_amd64.deb")
+    out = os.path.join(OUT_DIR, f"{PACKAGE}_{VERSION}_{ARCH}.deb")
     open(out, "wb").write(deb)
 
     print(f"  {os.path.basename(out)}")

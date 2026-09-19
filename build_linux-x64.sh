@@ -22,3 +22,7 @@ dotnet publish ./src/Launcher.slnx -c Release --self-contained -r linux-x64 --pr
 echo ""
 echo "Building Velopack Release v$BUILD_VERSION"
 vpk pack --packTitle "Free Realms Legacy" --packAuthors "Raising Kaines" -u FreeRealmsLegacyLauncher -e Launcher -o "$RELEASE_DIR" -p "$PUBLISH_DIR" -i ./assets/icon.png -v $BUILD_VERSION
+
+echo ""
+echo "Building Debian package (easy install for Linux and ChromeOS)"
+python3 "$SCRIPT_DIR/build-deb.py" "$BUILD_VERSION" "$PUBLISH_DIR" "$RELEASE_DIR" amd64
