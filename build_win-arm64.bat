@@ -16,4 +16,4 @@ dotnet publish .\src\Launcher.slnx -c Release --no-self-contained -r win-arm64 -
 
 echo.
 echo Building Velopack Release v%version%
-vpk pack --packTitle "OSFR Launcher" --packAuthors "OSFR Team" -u OSFRLauncher -e Launcher.exe -o "%~dp0releases" -p "%~dp0publish" -i "%~dp0publish\App.ico" -f net10-arm64-desktop --channel win-arm64 -v %*
+vpk pack --packTitle "Free Realms Legacy" --packAuthors "Raising Kaines" -u FreeRealmsLegacyLauncher -e Launcher.exe -o "%~dp0releases" -p "%~dp0publish" -i "%~dp0publish\App.ico" -f net10-arm64-desktop --channel win-arm64 -v %*

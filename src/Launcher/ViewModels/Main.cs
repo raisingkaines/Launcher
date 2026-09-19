@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -35,6 +35,8 @@ public partial class Main : ObservableObject
 
     [ObservableProperty]
     private SemanticVersion version = App.CurrentVersion;
+
+    public string VersionLabel => $"v{Version}";
 
     public AvaloniaList<Server> Servers { get; } = [];
     public AvaloniaList<Notification> Notifications { get; } = [];
@@ -89,8 +91,38 @@ public partial class Main : ObservableObject
             }
         }
 
+        _ = RefreshServerStatusesAsync();
+
         UpdateDiscordActivity();
     }
+
+    /// <summary>
+    /// Fills in the status dot beside every server in the rail. One at a time, because a
+    /// refresh writes the server details back to the settings file.
+    /// </summary>
+    private async Task RefreshServerStatusesAsync()
+    {
+        foreach (var server in Servers.ToArray())
+        {
+            server.QuietRefresh = true;
+
+            try
+            {
+                await server.RefreshCommand.ExecuteAsync(null);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn(ex, "Could not refresh the status of server: {Name}.", server.Info.Name);
+            }
+            finally
+            {
+                server.QuietRefresh = false;
+            }
+        }
+    }
+
+    partial void OnVersionChanged(SemanticVersion value)
+        => OnPropertyChanged(nameof(VersionLabel));
 
     public void UpdateDiscordActivity()
     {
@@ -121,6 +153,31 @@ public partial class Main : ObservableObject
 
     [RelayCommand]
     public void ShowAddServer() => App.ShowPopup(new AddServer());
+
+    [RelayCommand]
+    public Task OpenDiscordAsync() => OpenUrlAsync(Constants.DiscordInviteUrl);
+
+    [RelayCommand]
+    public Task OpenWebsiteAsync() => OpenUrlAsync(Constants.WebsiteUrl);
+
+    private async Task OpenUrlAsync(string url)
+    {
+        try
+        {
+            var window = App.GetWindow();
+
+            await window.Launcher.LaunchUriAsync(new Uri(url));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Error opening: {Url}.", url);
+
+            App.AddNotification($"""
+                                 Unable to open that link.
+                                 {url}
+                                 """, true);
+        }
+    }
 
     [RelayCommand]
     public async Task OpenLogsAsync()

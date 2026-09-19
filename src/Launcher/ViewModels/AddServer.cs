@@ -136,7 +136,7 @@ public partial class AddServer : Popup
         {
             // Sanitize the server name to be a valid directory name.
             var validName = name.ToValidDirectoryName();
-            var basePath = Path.Combine(Constants.SavePath, Constants.ServersDirectory);
+            var basePath = InstallPaths.Root;
             Directory.CreateDirectory(basePath);
 
             int counter = 1;

@@ -22,6 +22,22 @@ public partial class Main : Window
         ViewModel.OnLoad();
     }
 
+    /// <summary>
+    /// The window draws its own title bar, so dragging it has to be wired up by hand.
+    /// </summary>
+    private void OnTitleBarPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            BeginMoveDrag(e);
+    }
+
+    private void OnMinimise(object? sender, RoutedEventArgs e)
+        => WindowState = WindowState.Minimized;
+
+    // Goes through Close() so the "still downloading" guard in OnClosing still applies.
+    private void OnClose(object? sender, RoutedEventArgs e)
+        => Close();
+
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         if (ViewModel.Servers.Any(s => s.IsDownloading))

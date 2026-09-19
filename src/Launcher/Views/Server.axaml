@@ -7,8 +7,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
              xmlns:vm="using:Launcher.ViewModels"
-             d:DesignHeight="550"
-             d:DesignWidth="650"
+             d:DesignHeight="420"
+             d:DesignWidth="800"
              x:DataType="vm:Server"
              mc:Ignorable="d">
 
@@ -16,121 +16,157 @@
     <vm:Server />
   </Design.DataContext>
 
-  <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,*,50,Auto">
+  <Grid RowDefinitions="*,Auto">
 
-    <!-- Title & Refresh Row -->
-    <Grid Grid.Row="0"
-          Margin="0,30,30,10"
-          HorizontalAlignment="Center"
-          VerticalAlignment="Center"
-          ColumnDefinitions="Auto,Auto">
-
-      <!-- Refresh Status -->
-      <Button Grid.Column="0"
-              VerticalAlignment="Center"
-              Classes="no_background"
-              Command="{Binding RefreshCommand}">
-        <Path Width="18"
-              Height="18"
-              Classes.rotating="{Binding RefreshCommand.IsRunning}"
-              Data="{StaticResource Icons.Loading}"
-              Stretch="Fill" />
-      </Button>
-
-      <!-- Title -->
-      <Border Grid.Column="1">
-        <TextBlock FontFamily="{StaticResource FontDefault}"
-                   FontSize="24"
-                   Text="{Binding Info.Name, Mode=OneWay}" />
-      </Border>
-    </Grid>
-
-    <!-- Server Status / Player Count -->
-    <Grid Grid.Row="1"
-          HorizontalAlignment="Center"
-          ColumnDefinitions="Auto,Auto">
-      <StackPanel Grid.Column="0"
-                  Margin="0,0,10,0"
-                  HorizontalAlignment="Center"
-                  Orientation="Horizontal"
-                  Spacing="2.5">
-        <TextBlock FontFamily="{StaticResource FontDefault}"
-                   FontSize="15"
-                   Text="{StaticResource Text.ServerStatus}" />
-        <TextBlock FontFamily="{StaticResource FontDefault}"
-                   FontSize="15"
-                   Foreground="{Binding ServerStatusFill}"
-                   Text="{Binding Status, Mode=TwoWay}" />
-      </StackPanel>
-
-      <StackPanel Grid.Column="1"
-                  HorizontalAlignment="Center"
-                  Orientation="Horizontal">
-        <TextBlock FontFamily="{StaticResource FontDefault}"
-                   FontSize="15"
-                   Text="{StaticResource Text.OnlinePlayers}" />
-        <TextBlock Width="30"
-                   FontFamily="{StaticResource FontDefault}"
-                   FontSize="15"
-                   Text="{Binding OnlinePlayers, Mode=OneWay}" />
-      </StackPanel>
-    </Grid>
-
-    <!-- Server Description -->
-    <Border Grid.Row="2"
-            Margin="20"
+    <!-- Server News, hidden until asked for -->
+    <Border Grid.Row="0"
+            MaxHeight="230"
+            Margin="56,6,56,10"
+            VerticalAlignment="Top"
+            Background="{StaticResource Color.Card}"
             BorderBrush="{StaticResource Color.Border}"
             BorderThickness="1"
-            CornerRadius="5">
-      <Border Padding="15"
-              Background="{StaticResource Color.Description}"
-              CornerRadius="5"
-              Opacity="0.050">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled" Opacity="100">
+            CornerRadius="10"
+            IsVisible="{Binding IsNewsVisible}">
+
+      <DockPanel>
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto">
+          <Border Grid.ColumnSpan="2"
+                  Background="{StaticResource Color.CardHeader}"
+                  CornerRadius="10,10,0,0" />
+          <TextBlock Grid.Column="0"
+                     Margin="14,7"
+                     FontFamily="{StaticResource FontDefault}"
+                     FontSize="12"
+                     Foreground="{StaticResource Color.Gold}"
+                     LetterSpacing="1"
+                     Text="{StaticResource Text.Server.News}" />
+          <Button Grid.Column="1"
+                  Width="22"
+                  Height="22"
+                  Margin="0,0,8,0"
+                  Classes="rail small"
+                  Command="{Binding ToggleNewsCommand}">
+            <TextBlock FontSize="12" FontWeight="Bold" Foreground="White" Text="X" />
+          </Button>
+        </Grid>
+
+        <ScrollViewer Padding="14,10" HorizontalScrollBarVisibility="Disabled">
           <md:MarkdownRenderer LinkCommand="{Binding OpenUriCommand}" MarkdownBuilder="{Binding MarkdownBuilder}" />
         </ScrollViewer>
-      </Border>
+      </DockPanel>
     </Border>
 
-    <!-- Server Play / Update Status -->
-    <StackPanel Grid.Row="3"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center">
-      <Button Classes="no_background"
-              Command="{Binding PlayCommand}"
-              Cursor="Hand"
-              IsEnabled="{Binding IsEnabled}"
-              IsVisible="{Binding PlayCommand.IsRunning, Converter={x:Static BoolConverters.Not}}">
-        <Image Width="165"
-               Source="/Assets/fr_asset3.png"
-               Stretch="UniformToFill" />
-      </Button>
-      <TextBlock FontFamily="{StaticResource FontDefault}"
-                 FontSize="14"
-                 IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                 Text="{Binding StatusMessage, Mode=OneWay}" />
-    </StackPanel>
+    <!-- Welcome Card -->
+    <Border Grid.Row="1"
+            Width="506"
+            Margin="0,0,0,26"
+            HorizontalAlignment="Center"
+            Background="{StaticResource Color.Card}"
+            BorderBrush="{StaticResource Color.Border}"
+            BorderThickness="1"
+            CornerRadius="10">
 
-    <!-- Client Folder -->
-    <StackPanel Grid.Row="4"
-                Margin="0,0,15,15"
-                HorizontalAlignment="Right">
-      <Button Classes="flat primary"
-              Command="{Binding OpenFolderCommand}"
-              CornerRadius="5"
-              ToolTip.Tip="{StaticResource Text.Server.ClientFolder.Tooltip}">
-        <Button.Background>
-          <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
-            <GradientStop Offset="0.0" Color="#96B9D9" />
-            <GradientStop Offset="4.0" Color="#202959" />
-            <GradientStop Offset="0.8" Color="#37538C" />
-          </LinearGradientBrush>
-        </Button.Background>
-        <Path Width="16"
-              Height="16"
-              Data="{StaticResource Icons.Folder}"
-              Stretch="Fill" />
-      </Button>
-    </StackPanel>
+      <StackPanel Orientation="Vertical">
+
+        <!-- Header -->
+        <Border Padding="16,7"
+                Background="{StaticResource Color.CardHeader}"
+                CornerRadius="10,10,0,0">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0"
+                       FontFamily="{StaticResource FontDefault}"
+                       FontSize="14"
+                       Foreground="{StaticResource Color.FG1}"
+                       Text="{Binding Welcome, Mode=OneWay}"
+                       TextTrimming="CharacterEllipsis" />
+
+            <Button Grid.Column="1"
+                    Width="20"
+                    Height="20"
+                    Classes="rail small"
+                    Command="{Binding ToggleNewsCommand}"
+                    IsVisible="{Binding Info.Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    ToolTip.Tip="{StaticResource Text.Server.News.Tooltip}">
+              <Path Width="11"
+                    Height="11"
+                    Data="{StaticResource Icons.Logs}"
+                    Stretch="Uniform" />
+            </Button>
+          </Grid>
+        </Border>
+
+        <!-- Status + Play -->
+        <Grid Margin="18,12,14,12" ColumnDefinitions="*,Auto">
+
+          <StackPanel Grid.Column="0"
+                      VerticalAlignment="Center"
+                      Orientation="Vertical"
+                      Spacing="7">
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Ellipse Width="10"
+                       Height="10"
+                       VerticalAlignment="Center"
+                       Fill="{Binding ServerStatusFill}" />
+              <TextBlock FontFamily="{StaticResource FontDefault}"
+                         FontSize="14"
+                         Foreground="{StaticResource Color.FG1}"
+                         Text="{StaticResource Text.ServerStatus}" />
+              <TextBlock FontFamily="{StaticResource FontDefault}"
+                         FontSize="14"
+                         Foreground="{Binding ServerStatusFill}"
+                         Text="{Binding Status, Mode=OneWay}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Ellipse Width="10"
+                       Height="10"
+                       VerticalAlignment="Center"
+                       Fill="{StaticResource Color.Gold}" />
+              <TextBlock FontFamily="{StaticResource FontDefault}"
+                         FontSize="14"
+                         Foreground="{StaticResource Color.FG1}"
+                         Text="{StaticResource Text.OnlinePlayers}" />
+              <TextBlock FontFamily="{StaticResource FontDefault}"
+                         FontSize="14"
+                         Foreground="{StaticResource Color.FG1}"
+                         Text="{Binding OnlinePlayers, Mode=OneWay}" />
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Play -->
+          <Button Grid.Column="1"
+                  MinWidth="150"
+                  VerticalAlignment="Center"
+                  Classes="play"
+                  Command="{Binding PlayCommand}"
+                  Content="{StaticResource Text.Main.Play}"
+                  Cursor="Hand"
+                  IsEnabled="{Binding IsEnabled}"
+                  IsVisible="{Binding PlayCommand.IsRunning, Converter={x:Static BoolConverters.Not}}" />
+
+          <Border Grid.Column="1"
+                  MinWidth="150"
+                  Height="44"
+                  IsVisible="{Binding PlayCommand.IsRunning}">
+            <Path Width="24"
+                  Height="24"
+                  Classes="rotating"
+                  Data="{StaticResource Icons.Loading}"
+                  Stretch="Uniform" />
+          </Border>
+        </Grid>
+
+        <!-- Download / launch progress -->
+        <TextBlock Margin="18,0,18,11"
+                   FontFamily="{StaticResource FontDefault}"
+                   FontSize="12"
+                   Foreground="{StaticResource Color.FG2}"
+                   IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   Text="{Binding StatusMessage, Mode=OneWay}"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
   </Grid>
 </UserControl>

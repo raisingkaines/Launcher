@@ -40,7 +40,7 @@ public partial class DeleteServer : Popup
         try
         {
             // Delete the server's directory and all its contents from the file system.
-            var serverDirectoryPath = Path.Combine(Constants.SavePath, Info.SavePath);
+            var serverDirectoryPath = InstallPaths.GetServerRoot(Info);
             await ForceDeleteDirectoryAsync(serverDirectoryPath);
         }
         catch (Exception ex)

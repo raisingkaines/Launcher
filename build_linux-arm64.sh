@@ -21,4 +21,4 @@ dotnet publish ./src/Launcher.slnx -c Release --self-contained -r linux-arm64 --
 
 echo ""
 echo "Building Velopack Release v$BUILD_VERSION"
-vpk pack --packTitle "OSFR Launcher" --packAuthors "OSFR Team" -u OSFRLauncher -e Launcher -o "$RELEASE_DIR" -p "$PUBLISH_DIR" -i ./assets/icon.png --channel linux-arm64 -v $BUILD_VERSION
+vpk pack --packTitle "Free Realms Legacy" --packAuthors "Raising Kaines" -u FreeRealmsLegacyLauncher -e Launcher -o "$RELEASE_DIR" -p "$PUBLISH_DIR" -i ./assets/icon.png --channel linux-arm64 -v $BUILD_VERSION

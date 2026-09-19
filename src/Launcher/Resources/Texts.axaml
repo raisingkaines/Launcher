@@ -15,8 +15,8 @@
   <x:String x:Key="Text.Add" xml:space="preserve">Add</x:String>
 
   <!-- Main Window -->
-  <x:String x:Key="Text.Servers" xml:space="preserve">Server List</x:String>
-  <x:String x:Key="Text.Title" xml:space="preserve">OSFR Launcher</x:String>
+  <x:String x:Key="Text.Servers" xml:space="preserve">Servers</x:String>
+  <x:String x:Key="Text.Title" xml:space="preserve">Free Realms Legacy</x:String>
   <x:String x:Key="Text.Main.Relaunching" xml:space="preserve">Relaunching...</x:String>
   <x:String x:Key="Text.Main.NoUpdatesFound" xml:space="preserve">No Updates Found! Launcher is up-to-date.</x:String>
   <x:String x:Key="Text.Main.Downloading" xml:space="preserve">>Downloading Update {0}... ({1}%)</x:String>
@@ -53,13 +53,13 @@
   <x:String x:Key="Text.Server.SecureApiWarning" xml:space="preserve">This server does not use HTTPS. Proceed at your own risk.</x:String>
   <x:String x:Key="Text.Server.PreparingGameFiles" xml:space="preserve">Preparing Game Files: ({0}/{1})</x:String>
   <x:String x:Key="Text.Server.VerifyClientFiles" xml:space="preserve">Verifying Client Files...</x:String>
-  <x:String x:Key="Text.ServerStatus" xml:space="preserve">Server Status: </x:String>
+  <x:String x:Key="Text.ServerStatus" xml:space="preserve">Status:</x:String>
   <x:String x:Key="Text.ServerStatus.Online" xml:space="preserve">Online</x:String>
   <x:String x:Key="Text.ServerStatus.Locked" xml:space="preserve">Locked</x:String>
   <x:String x:Key="Text.ServerStatus.Offline" xml:space="preserve">Offline</x:String>
   <x:String x:Key="Text.ServerStatus.UnsupportedVersion" xml:space="preserve">Unsupported</x:String>
   <x:String x:Key="Text.ServerStatus.Refreshing" xml:space="preserve">Refreshing</x:String>
-  <x:String x:Key="Text.OnlinePlayers" xml:space="preserve">Player Count: </x:String>
+  <x:String x:Key="Text.OnlinePlayers" xml:space="preserve">Players:</x:String>
 
   <!-- Add Server -->
   <x:String x:Key="Text.Add_Server.ServerUrl" xml:space="preserve">Server URL:</x:String>
@@ -88,9 +88,29 @@
 
   <!-- Discord -->
   <x:String x:Key="Text.Discord.Playing" xml:space="preserve">Playing on Server(s): </x:String>
-  <x:String x:Key="Text.Discord.Idle" xml:space="preserve">Idling in the OSFR Launcher</x:String>
+  <x:String x:Key="Text.Discord.Idle" xml:space="preserve">Idling in Free Realms Legacy</x:String>
 
   <!-- Logs -->
   <x:String x:Key="Text.Logs" xml:space="preserve">Open Logs</x:String>
 
+
+  <!-- Install Location -->
+  <x:String x:Key="Text.Settings.Install.Location" xml:space="preserve">Game install location</x:String>
+  <x:String x:Key="Text.Settings.Install.Location.Tooltip" xml:space="preserve">Where the game files are kept. Any drive with enough room will do.</x:String>
+  <x:String x:Key="Text.Settings.Install.Browse" xml:space="preserve">Change...</x:String>
+  <x:String x:Key="Text.Settings.Install.Open" xml:space="preserve">Open install folder</x:String>
+  <x:String x:Key="Text.Settings.Install.MoveExisting" xml:space="preserve">Move installed game files to the new folder</x:String>
+  <x:String x:Key="Text.Settings.Install.MoveExisting.Tooltip" xml:space="preserve">Moves clients you have already downloaded instead of leaving them behind and downloading again.</x:String>
+  <x:String x:Key="Text.Settings.Install.PickerTitle" xml:space="preserve">Choose where to install Free Realms Legacy</x:String>
+
+  <!-- Launcher Shell -->
+  <x:String x:Key="Text.Main.Welcome" xml:space="preserve">Welcome back </x:String>
+  <x:String x:Key="Text.Main.WelcomeGuest" xml:space="preserve">Welcome to Free Realms Legacy</x:String>
+  <x:String x:Key="Text.Main.Play" xml:space="preserve">Play</x:String>
+  <x:String x:Key="Text.Main.Discord.Tooltip" xml:space="preserve">Join the Discord</x:String>
+  <x:String x:Key="Text.Main.Website.Tooltip" xml:space="preserve">Open the website</x:String>
+  <x:String x:Key="Text.Main.NoServer" xml:space="preserve">Pick a server on the left to get started.</x:String>
+  <x:String x:Key="Text.Server.News" xml:space="preserve">Server News</x:String>
+  <x:String x:Key="Text.Server.News.Tooltip" xml:space="preserve">Show server news</x:String>
+  <x:String x:Key="Text.Server.Options.Tooltip" xml:space="preserve">Server options</x:String>
 </ResourceDictionary>

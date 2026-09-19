@@ -1,4 +1,4 @@
-﻿using System.Xml.Serialization;
+using System.Xml.Serialization;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -26,9 +26,10 @@ public sealed class ServerInfo : ObservableObject
     public required string LoginServer { get; set; }
 
     /// <summary>
-    /// This is generated once the server is added.
+    /// Absolute path to this server folder. Generated when the server is added, and
+    /// updated if the player moves the install location to another drive.
     /// </summary>
-    public required string SavePath { get; init; }
+    public required string SavePath { get; set; }
 
     public string? Username { get; set; }
     public bool RememberUsername { get; set; }

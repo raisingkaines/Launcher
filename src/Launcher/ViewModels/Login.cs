@@ -219,7 +219,7 @@ public partial class Login : Popup
             launcherArguments.Add(serverArguments);
 
         var arguments = string.Join(' ', launcherArguments);
-        var workingDirectory = Path.Combine(Constants.SavePath, _server.Info.SavePath, "Client");
+        var workingDirectory = InstallPaths.GetClientPath(_server.Info);
         var executablePath = Path.Combine(workingDirectory, Constants.ClientExecutableName);
 
         if (!File.Exists(executablePath))

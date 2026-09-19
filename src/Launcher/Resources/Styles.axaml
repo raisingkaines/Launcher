@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
   <Design.PreviewWith>
@@ -112,5 +112,117 @@
   </Style>
   <Style Selector="Button.no_background:disabled /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <!-- Round rail buttons: the small icon row under the server list -->
+  <Style Selector="Button.rail">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="15" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Background" Value="#26FFFFFF" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.rail /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="CornerRadius" Value="15" />
+  </Style>
+  <Style Selector="Button.rail:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource Color.Accent2}" />
+  </Style>
+  <Style Selector="Button.rail:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource Color.Accent1}" />
+  </Style>
+  <Style Selector="Button.rail:disabled">
+    <Setter Property="Opacity" Value="0.45" />
+  </Style>
+
+  <!-- Window caption buttons: the rounded purple / red pills from the concept -->
+  <Style Selector="Button.caption">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="19" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Background" Value="#7B5BD6" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.caption /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="CornerRadius" Value="5" />
+  </Style>
+  <Style Selector="Button.caption:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#9478E8" />
+  </Style>
+  <Style Selector="Button.caption.close">
+    <Setter Property="Background" Value="#D8443F" />
+  </Style>
+  <Style Selector="Button.caption.close /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#D8443F" />
+  </Style>
+  <Style Selector="Button.caption.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#EA5A55" />
+  </Style>
+
+  <!-- Smaller rail button, used inside list rows and card headers -->
+  <Style Selector="Button.rail.small">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="CornerRadius" Value="11" />
+    <Setter Property="Background" Value="#22FFFFFF" />
+  </Style>
+
+  <!-- The green Play button -->
+  <Style Selector="Button.play">
+    <Setter Property="Height" Value="46" />
+    <Setter Property="Padding" Value="26,0" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FontFamily" Value="{StaticResource FontDefault}" />
+    <Setter Property="FontSize" Value="24" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="BorderBrush" Value="#1F4D14" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Background">
+      <Setter.Value>
+        <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+          <GradientStop Offset="0.0" Color="#A8E063" />
+          <GradientStop Offset="0.45" Color="#6FC02F" />
+          <GradientStop Offset="1.0" Color="#3E8B1E" />
+        </LinearGradientBrush>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style Selector="Button.play /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Background">
+      <Setter.Value>
+        <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+          <GradientStop Offset="0.0" Color="#A8E063" />
+          <GradientStop Offset="0.45" Color="#6FC02F" />
+          <GradientStop Offset="1.0" Color="#3E8B1E" />
+        </LinearGradientBrush>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style Selector="Button.play:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background">
+      <Setter.Value>
+        <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+          <GradientStop Offset="0.0" Color="#BDEE7C" />
+          <GradientStop Offset="0.45" Color="#7FD23C" />
+          <GradientStop Offset="1.0" Color="#4A9E26" />
+        </LinearGradientBrush>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style Selector="Button.play:disabled">
+    <Setter Property="Opacity" Value="0.5" />
   </Style>
 </Styles>

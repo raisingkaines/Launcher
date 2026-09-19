@@ -1,21 +1,59 @@
-### Getting Started
+<a id="readme-top"></a>
 
-#### Installation
-1.  Navigate to the **[Releases page](https://github.com/Open-Source-Free-Realms/Launcher/releases)**.
-2.  Download the latest `OSFRLauncher-win-Setup.exe`.
-    > **Note:** We recommend the setup version for the best experience, but portable builds are also available for convenience.
-3.  Run the installer and follow the on-screen instructions.
+<div align="center">
+  <img src="assets/icon.png" alt="Free Realms Legacy" width="100" height="100">
 
-#### How to Play
-1.  Launch the application.
-2.  Enter a server URL from a **Known** host.
-3.  Click **"Play"**.
-4.  Log in with your account details and enjoy the game!
+  <h3 align="center">Free Realms Legacy Launcher</h3>
 
-### Building from Source
+  <p align="center">
+    The launcher for Free Realms Legacy.
+    <br />
+    <a href="https://github.com/raisingkaines/Launcher/releases"><strong>Download the latest release &raquo;</strong></a>
+  </p>
+</div>
 
-To compile the launcher from source, you will first need to clone the repository. Then, navigate into the project's directory using the command line and run the `build.bat` script.
+---
 
-### How to Contribute
+### Getting started
 
-If you have an idea for an improvement or have found a bug, feel free to fork the repository, make your changes, and submit a pull request.
+1. Download `FreeRealmsLegacyLauncher-win-Setup.exe` from the
+   [releases page](https://github.com/raisingkaines/Launcher/releases). A portable
+   build is there too if you would rather not install anything.
+2. Run it, then press **Play** and log in.
+
+`https://play.raisingkaines.com` is added for you the first time the launcher runs.
+Use **+** in the bottom-left to add any other server.
+
+### Where the game gets installed
+
+By default the game lands in `%LOCALAPPDATA%\FreeRealmsLegacyLauncher\Servers`, but it
+does not have to stay there. Open **Settings** (the cog) and use **Change...** next to
+*Game install location* - that opens the standard Windows folder picker, so any drive
+with enough room works.
+
+Leave **Move installed game files to the new folder** ticked and anything already
+downloaded is moved across, including onto a different drive, rather than downloaded
+again. The launcher checks the new folder is writable and has room before it starts,
+and refuses to move while the game is running.
+
+The launcher's own settings and saved logins stay in your user profile - only the game
+files move.
+
+### Building from source
+
+Needs the .NET 10 SDK and [Velopack](https://velopack.io) (`dotnet tool install -g vpk`).
+
+```bash
+dotnet build ./src/Launcher.slnx -c Release
+./build_win-x64.bat 1.2.0
+```
+
+`build_win-x64.bat` publishes the app and packs a Velopack release into `releases/`.
+There are matching scripts for Linux and macOS.
+
+### Credits
+
+Forked from the [Open Source Free Realms launcher](https://github.com/Open-Source-Free-Realms/Launcher)
+and licensed under the AGPL-3.0, the same as upstream - see [LICENSE](LICENSE).
+
+Artwork notes and how to swap the branding are in [brand/README.md](brand/README.md).

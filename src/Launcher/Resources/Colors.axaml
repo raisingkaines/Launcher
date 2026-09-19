@@ -2,19 +2,41 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
   <Design.PreviewWith>
-    <Border Padding="20" Background="{StaticResource Color.FG1}" />
+    <Border Padding="20" Background="{StaticResource Color.Window}" />
   </Design.PreviewWith>
 
-  <SolidColorBrush x:Key="Color.Window">#FF252525</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.Popup">#2A3A61</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.Contents">#FF181818</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.Server">#0D000000</SolidColorBrush>
+  <!-- Shell -->
+  <SolidColorBrush x:Key="Color.Window">#FF14161F</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Popup">#FF1B1F2C</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Contents">#FF101219</SolidColorBrush>
+
+  <!-- Server rail: sits over the artwork, so it is deliberately translucent -->
+  <SolidColorBrush x:Key="Color.Server">#E60E1017</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Rail.Item">#00000000</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Rail.ItemHover">#22FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Rail.ItemSelected">#3A6E4FD8</SolidColorBrush>
+
+  <!-- Cards over the artwork -->
+  <SolidColorBrush x:Key="Color.Card">#D90B0D14</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.CardHeader">#D9161A27</SolidColorBrush>
   <SolidColorBrush x:Key="Color.Description">#000000</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.Border">#3C4C74</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.FlatButton.PrimaryBackground">#3C4C74</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.FlatButton.PrimaryBackgroundHovered">#3C4C74</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.FG1">#ffffff</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.FG2">#40F1F1F1</SolidColorBrush>
-  <SolidColorBrush x:Key="Color.Accent1">#3C4C74</SolidColorBrush>
+
+  <!-- Free Realms purple and gold -->
+  <SolidColorBrush x:Key="Color.Border">#5A4B8C</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Accent1">#8A6BE2</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Accent2">#5B44A8</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Gold">#E8B44A</SolidColorBrush>
+
+  <SolidColorBrush x:Key="Color.FlatButton.PrimaryBackground">#4A3C7A</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.FlatButton.PrimaryBackgroundHovered">#5F4D9C</SolidColorBrush>
+
+  <!-- Status -->
+  <SolidColorBrush x:Key="Color.Status.Online">#4CD964</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Status.Offline">#E5484D</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.Status.Unknown">#8A8A95</SolidColorBrush>
+
+  <!-- Text -->
+  <SolidColorBrush x:Key="Color.FG1">#FFFFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="Color.FG2">#A6C3C6D6</SolidColorBrush>
 
 </ResourceDictionary>

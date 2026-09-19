@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -67,6 +67,72 @@ public partial class Server : ObservableObject
     [ObservableProperty]
     private ObservableStringBuilder markdownBuilder = new();
 
+    [ObservableProperty]
+    private string welcome = string.Empty;
+
+    [ObservableProperty]
+    private string subtitle = string.Empty;
+
+    [ObservableProperty]
+    private bool isNewsVisible;
+
+    /// <summary>
+    /// Set while the rail fills in every server status at startup, so servers that happen
+    /// to be down do not greet the player with a stack of error toasts.
+    /// </summary>
+    public bool QuietRefresh { get; set; }
+
+    private void Notify(string message, bool isError = false)
+    {
+        if (QuietRefresh)
+            return;
+
+        App.AddNotification(message, isError);
+    }
+
+    /// <summary>
+    /// Greets the player by the name they logged in with, when there is one.
+    /// </summary>
+    public void UpdateWelcome()
+    {
+        Welcome = string.IsNullOrWhiteSpace(Info?.Username)
+            ? App.GetText("Text.Main.WelcomeGuest")
+            : App.GetText("Text.Main.Welcome") + Info.Username;
+
+        Subtitle = FirstLine(Info?.Description) is { Length: > 0 } line ? line : Status;
+    }
+
+    private static readonly char[] NewLineChars = [(char)13, (char)10];
+
+    /// <summary>
+    /// The first sentence of the server description, short enough for the rail.
+    /// </summary>
+    private static string FirstLine(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        var line = text.AsSpan();
+
+        var end = line.IndexOfAny(NewLineChars);
+
+        if (end >= 0)
+            line = line[..end];
+
+        var trimmed = line.Trim().ToString();
+
+        return trimmed.Length > 42 ? string.Concat(trimmed.AsSpan(0, 41), "…") : trimmed;
+    }
+
+    [RelayCommand]
+    private void ToggleNews() => IsNewsVisible = !IsNewsVisible;
+
+    partial void OnStatusChanged(string value)
+    {
+        if (string.IsNullOrWhiteSpace(Subtitle) || Subtitle == value)
+            Subtitle = value;
+    }
+
     public Server()
     {
 #if DEBUG && DESIGNMODE
@@ -98,7 +164,11 @@ public partial class Server : ObservableObject
         MarkdownBuilder.Clear();
         MarkdownBuilder.Append(Info.Description);
 
+        UpdateWelcome();
+
         await RefreshCommand.ExecuteAsync(null);
+
+        UpdateWelcome();
     }
 
     public void ClientProcessExited(object? sender, EventArgs e)
@@ -133,10 +203,10 @@ public partial class Server : ObservableObject
 
                 if (result.Result != ManifestResult.Success || result.ServerManifest is null)
                 {
-                    App.AddNotification($"""
-                                         Failed to get server info.
-                                         {result.Error}
-                                         """, true);
+                    Notify($"""
+                           Failed to get server info.
+                           {result.Error}
+                           """, true);
 
                     _logger.Error("Failed to get server manifest for: {Url}: {Error}.", Info.Url, result.Error);
 
@@ -167,13 +237,15 @@ public partial class Server : ObservableObject
                 Info.LoginServer = serverManifest.LoginServer;
 
                 Settings.Instance.Save();
+
+                UpdateWelcome();
             }
             catch (Exception ex)
             {
                 ServerStatusFill = RedBrush;
                 Status = App.GetText("Text.ServerStatus.Offline");
 
-                App.AddNotification("An error occurred while getting server info.", true);
+                Notify("An error occurred while getting server info.", true);
 
                 _logger.Error(ex, "An exception was thrown while getting server info for: {Url}.", Info.Url);
 
@@ -292,7 +364,7 @@ public partial class Server : ObservableObject
         {
             var window = App.GetWindow();
 
-            var folderPath = Path.Combine(Constants.SavePath, Info.SavePath);
+            var folderPath = InstallPaths.GetServerRoot(Info);
 
             var directoryInfo = new DirectoryInfo(folderPath);
 
@@ -463,7 +535,7 @@ public partial class Server : ObservableObject
         try
         {
             var clientFileUri = UriHelper.JoinUriPaths(Info.Url, "client", path, fileName);
-            var fileDirectory = Path.Combine(Constants.SavePath, Info.SavePath, "Client", path);
+            var fileDirectory = Path.Combine(InstallPaths.GetClientPath(Info), path);
             var filePath = Path.Combine(fileDirectory, fileName);
 
             Directory.CreateDirectory(fileDirectory);
@@ -507,7 +579,7 @@ public partial class Server : ObservableObject
         // Check files in the current folder
         foreach (var file in rootFolder.Files)
         {
-            var fileDirectory = Path.Combine(Constants.SavePath, Info.SavePath, "Client", path);
+            var fileDirectory = Path.Combine(InstallPaths.GetClientPath(Info), path);
             var filePath = Path.Combine(fileDirectory, file.Name);
 
             if (File.Exists(filePath))
