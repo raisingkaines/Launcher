@@ -15,8 +15,12 @@ public static class DiscordService
     private static CancellationTokenSource _cts = new();
     private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-    // The Client ID for the "OSFR Launcher" Discord application.
-    private const long ClientId = 1223728876199608410;
+    /// <summary>When the current state began, for Discord's elapsed timer.</summary>
+    private static long _since = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+    private static string _current = string.Empty;
+
+    private const long ClientId = Helpers.Constants.DiscordClientId;
 
     public static void Start()
     {
@@ -98,6 +102,15 @@ public static class DiscordService
     {
         lock (_lock)
         {
+            // Restart the clock only when what is being shown actually changes.
+            var signature = details + "" + state;
+
+            if (signature != _current)
+            {
+                _current = signature;
+                _since = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            }
+
             if (_discord == null)
             {
                 // Don't log an error here, as this can happen normally if Discord isn't running.
@@ -114,7 +127,17 @@ public static class DiscordService
                     Type = ActivityType.Playing,
                     Timestamps =
                     {
-                       Start = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                        // Discord shows this as "elapsed", so it has to be when the state
+                        // began, not when it was last sent - otherwise it resets to 00:00
+                        // every time anything on the launcher changes.
+                        Start = _since
+                    },
+                    Assets =
+                    {
+                        LargeImage = Helpers.Constants.DiscordLargeImage,
+                        LargeText = App.GetText("Text.Title"),
+                        SmallImage = Helpers.Constants.DiscordSmallImage,
+                        SmallText = state
                     }
                 };
 

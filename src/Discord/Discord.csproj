@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -6,36 +6,39 @@
     <NoWarn>CS8600,CS8601,CS8602,CS8605,CS8618,CS8625</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(Platform)' == 'x64' And $([MSBuild]::IsOSPlatform('Windows'))">
+  <!--
+    Which native library ships.
+
+    These conditions used to require '$(Platform)' == 'x64', but a plain `dotnet build`
+    leaves Platform as AnyCPU, so nothing was ever copied and Rich Presence died on every
+    launch with DllNotFoundException before it could start. Decide from the architecture
+    actually being targeted instead, and fall back to x86_64, which is what AnyCPU runs as
+    here. Windows only has an x86_64 build; on arm64 it runs under emulation.
+  -->
+  <PropertyGroup>
+    <DiscordArch>x86_64</DiscordArch>
+    <DiscordArch Condition="'$(PlatformTarget)' == 'arm64' Or '$(Platform)' == 'ARM64'">aarch64</DiscordArch>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <ContentWithTargetPath Include="lib\x86_64\discord_game_sdk.dll">
       <TargetPath>discord_game_sdk.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </ContentWithTargetPath>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Platform)' == 'x64' And $([MSBuild]::IsOSPlatform('OSX'))">
-    <ContentWithTargetPath Include="lib\x86_64\discord_game_sdk.dylib">
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <ContentWithTargetPath Include="lib\$(DiscordArch)\discord_game_sdk.dylib">
       <TargetPath>discord_game_sdk.dylib</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </ContentWithTargetPath>
-    <ContentWithTargetPath Include="lib\x86_64\discord_game_sdk.bundle">
+    <ContentWithTargetPath Include="lib\$(DiscordArch)\discord_game_sdk.bundle">
       <TargetPath>discord_game_sdk.bundle</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </ContentWithTargetPath>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Platform)' == 'arm64' And $([MSBuild]::IsOSPlatform('OSX'))">
-    <ContentWithTargetPath Include="lib\aarch64\discord_game_sdk.dylib">
-      <TargetPath>discord_game_sdk.dylib</TargetPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="lib\aarch64\discord_game_sdk.bundle">
-      <TargetPath>discord_game_sdk.bundle</TargetPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentWithTargetPath>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Platform)' == 'x64' And $([MSBuild]::IsOSPlatform('Linux'))">
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
     <ContentWithTargetPath Include="lib\x86_64\discord_game_sdk.so">
       <TargetPath>discord_game_sdk.so</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

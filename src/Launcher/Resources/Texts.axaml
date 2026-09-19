@@ -87,8 +87,9 @@
   <x:String x:Key="Text.Settings.General.ParallelDownloads.Tooltip" xml:space="preserve">Number of parallel downloads. Higher values are faster on faster connections/SSDs but are more resource-intensive. Maximum recommended is your CPU core count; the default is half that.</x:String>
 
   <!-- Discord -->
-  <x:String x:Key="Text.Discord.Playing" xml:space="preserve">Playing on Server(s): </x:String>
-  <x:String x:Key="Text.Discord.Idle" xml:space="preserve">Idling in Free Realms Legacy</x:String>
+  <x:String x:Key="Text.Discord.Playing" xml:space="preserve">Playing on</x:String>
+  <x:String x:Key="Text.Discord.Idle" xml:space="preserve">In the launcher</x:String>
+  <x:String x:Key="Text.Discord.Idle.State" xml:space="preserve">Choosing a server</x:String>
 
   <!-- Logs -->
   <x:String x:Key="Text.Logs" xml:space="preserve">Open Logs</x:String>

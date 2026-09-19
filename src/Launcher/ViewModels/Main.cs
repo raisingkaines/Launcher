@@ -171,11 +171,13 @@ public partial class Main : ObservableObject
         var serversPlaying = Servers.Where(x => x.Process is not null).Select(x => x.Info.Name);
         var playingOn = string.Join(", ", serversPlaying);
 
-        var details = string.IsNullOrEmpty(playingOn)
-            ? App.GetText("Text.Discord.Idle")
-            : App.GetText("Text.Discord.Playing");
+        // Discord stacks these two: details on the first line, state on the second.
+        var idle = string.IsNullOrEmpty(playingOn);
 
-        DiscordService.UpdateActivity(details, playingOn);
+        var details = idle ? App.GetText("Text.Discord.Idle") : App.GetText("Text.Discord.Playing");
+        var state = idle ? App.GetText("Text.Discord.Idle.State") : playingOn;
+
+        DiscordService.UpdateActivity(details, state);
     }
 
     [RelayCommand]
