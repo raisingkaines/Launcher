@@ -22,6 +22,11 @@ public static class Constants
 
     public static readonly string[] DefaultServerUrls = ["https://play.raisingkaines.com"];
 
+    /// <summary>
+    /// How often the server list re-pings for status and player counts.
+    /// </summary>
+    public static readonly TimeSpan ServerStatusRefreshInterval = TimeSpan.FromSeconds(30);
+
     public static readonly string LogsDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
 
     /// <summary>

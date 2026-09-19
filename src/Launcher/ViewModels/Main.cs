@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using Avalonia.Collections;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -37,6 +38,9 @@ public partial class Main : ObservableObject
     private SemanticVersion version = App.CurrentVersion;
 
     public string VersionLabel => $"v{Version}";
+
+    private readonly DispatcherTimer _statusTimer = new() { Interval = Constants.ServerStatusRefreshInterval };
+    private bool _statusRefreshRunning;
 
     public AvaloniaList<Server> Servers { get; } = [];
     public AvaloniaList<Notification> Notifications { get; } = [];
@@ -93,7 +97,38 @@ public partial class Main : ObservableObject
 
         _ = RefreshServerStatusesAsync();
 
+        _statusTimer.Tick += OnStatusTimerTick;
+        _statusTimer.Start();
+
         UpdateDiscordActivity();
+    }
+
+    /// <summary>
+    /// Keeps the player counts in the rail honest without a full refresh: each tick is one
+    /// UDP ping per server, so no HTTP calls and no settings writes.
+    /// </summary>
+    private async void OnStatusTimerTick(object? sender, EventArgs e)
+    {
+        if (_statusRefreshRunning)
+            return;
+
+        _statusRefreshRunning = true;
+
+        try
+        {
+            foreach (var server in Servers.ToArray())
+            {
+                await server.RefreshServerStatusAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Auto refresh of server status failed.");
+        }
+        finally
+        {
+            _statusRefreshRunning = false;
+        }
     }
 
     /// <summary>

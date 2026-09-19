@@ -255,6 +255,25 @@ public partial class Server : ObservableObject
             }
         }
 
+        await RefreshServerStatusAsync(quiet: false);
+
+        IsEnabled = true;
+    }
+
+    /// <summary>
+    /// Asks the login server for its status and player count.
+    ///
+    /// This is the cheap half of a refresh - a single UDP round trip, with no HTTP call
+    /// and no write to the settings file - so it is what the auto-refresh ticker uses to
+    /// keep player counts current.
+    /// </summary>
+    public async Task RefreshServerStatusAsync(bool quiet = true)
+    {
+        // Before the manifest has been read we do not know where to ping, and a silent
+        // refresh should not flip a server to offline over that.
+        if (quiet && string.IsNullOrEmpty(Info.LoginServer))
+            return;
+
         try
         {
             var serverStatus = await ServerStatusHelper.GetAsync(Info.LoginServer);
@@ -288,11 +307,10 @@ public partial class Server : ObservableObject
 
             _logger.Error(ex, "Error refreshing server status for: '{Name}'.", Info.Name);
 
-            App.AddNotification("Unable to refresh server status.", true);
+            if (!quiet)
+                App.AddNotification("Unable to refresh server status.", true);
         }
-
-        IsEnabled = true;
-        }
+    }
 
     [RelayCommand(AllowConcurrentExecutions = false)]
     public async Task PlayAsync()
