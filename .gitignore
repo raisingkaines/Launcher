@@ -404,3 +404,9 @@ FodyWeavers.xsd
 # Velopack release output and packer scratch space
 releases/
 .build-temp/
+
+# Build output for the other platforms. These carry absolute NuGet paths with the
+# building user's name in them, so they must never be committed.
+publish-*/
+releases-*/
+bundle-*/
