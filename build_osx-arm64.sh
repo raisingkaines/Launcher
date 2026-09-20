@@ -20,5 +20,13 @@ echo "Compiling Launcher with dotnet..."
 dotnet publish ./src/Launcher.slnx -c Release --self-contained -r osx-arm64 --property:PublishDir="$PUBLISH_DIR"
 
 echo ""
+source "$SCRIPT_DIR/build-mac-sign.sh"
+
+echo ""
 echo "Building Velopack Release v$BUILD_VERSION"
-vpk pack --packTitle "Free Realms Legacy" --packAuthors "Raising Kaines" -u FreeRealmsLegacyLauncher -e Launcher -o "$RELEASE_DIR" -p "$PUBLISH_DIR" -i ./assets/icon.icns --channel osx-arm64 -v $BUILD_VERSION
+vpk pack --packTitle "Free Realms Legacy" --packAuthors "Raising Kaines" -u FreeRealmsLegacyLauncher -e Launcher -o "$RELEASE_DIR" -p "$PUBLISH_DIR" -i ./assets/icon.icns --channel osx-arm64 -v $BUILD_VERSION "${SIGN_ARGS[@]}"
+
+echo ""
+echo "Building the disk image..."
+chmod +x "$SCRIPT_DIR/build-mac-dmg.sh"
+"$SCRIPT_DIR/build-mac-dmg.sh" "$RELEASE_DIR" "$BUILD_VERSION"
