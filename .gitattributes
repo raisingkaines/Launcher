@@ -1,0 +1,9 @@
+# Shell scripts must keep LF endings. A CRLF one fails on macOS and Linux with
+# "bad interpreter: /bin/bash^M", which reads as a broken script rather than a
+# line ending problem, so pin it here rather than rely on anyone's git config.
+*.sh text eol=lf
+*.command text eol=lf
+
+# Same reasoning for the Windows side.
+*.bat text eol=crlf
+*.cmd text eol=crlf
