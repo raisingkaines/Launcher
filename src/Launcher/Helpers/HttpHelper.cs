@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -73,46 +74,106 @@ public static class HttpHelper
     }
 
     /// <summary>
+    /// Hosts whose system DNS answer has already proven wrong, so the public resolver is
+    /// used directly from then on. Session only: a network problem can clear, and this
+    /// should not outlive the launcher being open.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, bool> _distrustedHosts = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Where an answer came from, which decides whether it is worth doubting later.
+    /// </summary>
+    private readonly record struct Resolution(IPAddress[] Addresses, bool FromSystemResolver);
+
+    /// <summary>
+    /// Stops trusting the system resolver for a host for the rest of the session.
+    /// </summary>
+    private static bool DistrustSystemDns(string host)
+    {
+        if (!_distrustedHosts.TryAdd(host, true))
+            return false;
+
+        _logger.Warn("Using a public resolver for '{Host}' from now on; the system one is answering wrongly.", host);
+
+        return true;
+    }
+
+    /// <summary>
     /// The system resolver first, falling back to DNS-over-HTTPS when it will not answer.
     ///
     /// Some ISPs filter or hijack DNS, which looks exactly like the server being down:
     /// the rest of the connection is fine and the lookup is the only thing that fails.
     /// Only the lookup moves - the connection, certificate check and SNI are unchanged.
+    ///
+    /// Worth knowing that a blocked lookup does not always fail. Plenty of ISPs answer it
+    /// with an address of their own instead, so the lookup succeeds and the connection
+    /// goes somewhere wrong - which is why the caller can come back and say it did.
     /// </summary>
-    private static async Task<IPAddress[]> ResolveAsync(string host, CancellationToken cancellationToken)
+    private static async Task<Resolution> ResolveAsync(string host, CancellationToken cancellationToken)
     {
-        try
+        if (!_distrustedHosts.ContainsKey(host))
         {
-            var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
 
-            if (addresses.Length > 0)
-                return addresses;
+                if (addresses.Length > 0)
+                    return new Resolution(addresses, FromSystemResolver: true);
 
-            _logger.Warn("The system resolver returned nothing for '{Host}'; trying DNS-over-HTTPS.", host);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.Warn(ex, "The system resolver failed for '{Host}'; trying DNS-over-HTTPS.", host);
+                _logger.Warn("The system resolver returned nothing for '{Host}'; trying DNS-over-HTTPS.", host);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn(ex, "The system resolver failed for '{Host}'; trying DNS-over-HTTPS.", host);
+            }
         }
 
-        return await DnsFallback.ResolveAsync(host, cancellationToken).ConfigureAwait(false);
+        var secure = await DnsFallback.ResolveAsync(host, cancellationToken).ConfigureAwait(false);
+
+        return new Resolution(secure, FromSystemResolver: false);
     }
 
     private static async ValueTask<Stream> HappyEyeballsConnectAsync(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
     {
         var dnsEndPoint = context.DnsEndPoint;
 
-        var addresses = await ResolveAsync(dnsEndPoint.Host, cancellationToken).ConfigureAwait(false);
+        var resolution = await ResolveAsync(dnsEndPoint.Host, cancellationToken).ConfigureAwait(false);
 
-        if (addresses.Length == 0)
+        if (resolution.Addresses.Length == 0)
         {
             throw new SocketException((int)SocketError.HostNotFound);
         }
 
+        try
+        {
+            return await ConnectToAnyAsync(resolution.Addresses, dnsEndPoint.Port, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (resolution.FromSystemResolver && !cancellationToken.IsCancellationRequested)
+        {
+            // Not one of the addresses the system gave us would take a connection. A
+            // hijacked lookup pointed at something dead looks exactly like this, so ask a
+            // public resolver before reporting the server down.
+            var secure = await DnsFallback.ResolveAsync(dnsEndPoint.Host, cancellationToken).ConfigureAwait(false);
+            var untried = secure.Except(resolution.Addresses).ToArray();
+
+            if (untried.Length == 0)
+                throw;
+
+            _logger.Warn(ex, "Could not reach '{Host}' at the system resolver's addresses; trying {Count} from a public resolver.",
+                dnsEndPoint.Host, untried.Length);
+
+            DistrustSystemDns(dnsEndPoint.Host);
+
+            return await ConnectToAnyAsync(untried, dnsEndPoint.Port, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static async ValueTask<Stream> ConnectToAnyAsync(IPAddress[] addresses, int port, CancellationToken cancellationToken)
+    {
         // Try IPv4 first so a broken IPv6 route cannot stall the request, but keep IPv6 as a fallback.
         var orderedAddresses = addresses
             .OrderBy(address => address.AddressFamily == AddressFamily.InterNetwork ? 0 : 1)
@@ -120,7 +181,7 @@ public static class HttpHelper
 
         if (orderedAddresses.Length == 1)
         {
-            var socket = await ConnectToAddressAsync(orderedAddresses[0], dnsEndPoint.Port, cancellationToken).ConfigureAwait(false);
+            var socket = await ConnectToAddressAsync(orderedAddresses[0], port, cancellationToken).ConfigureAwait(false);
 
             return new NetworkStream(socket, ownsSocket: true);
         }
@@ -134,7 +195,7 @@ public static class HttpHelper
             var address = orderedAddresses[i];
             var staggerDelay = _connectionAttemptDelay * i;
 
-            pendingTasks.Add(ConnectWithDelayAsync(address, dnsEndPoint.Port, staggerDelay, attemptsCts.Token));
+            pendingTasks.Add(ConnectWithDelayAsync(address, port, staggerDelay, attemptsCts.Token));
         }
 
         Exception? lastException = null;
@@ -235,7 +296,50 @@ public static class HttpHelper
         return $"Could not reach {host}: {ex.Message}";
     }
 
+    /// <summary>
+    /// Fetches a server's manifest, and does not take a blocked lookup for an offline server.
+    ///
+    /// A provider that interferes with DNS does not necessarily break it. Answering with an
+    /// address of its own is just as common, and then the lookup succeeds, the connection is
+    /// made to the wrong place, and what comes back is a block page or a certificate for
+    /// somebody else. Both arrive here looking like a broken server rather than a blocked
+    /// one, so a reply of that shape is retried once through a public resolver.
+    /// </summary>
     public static async Task<(ManifestResult Result, string Error, ServerManifest? ServerManifest)> GetServerManifestAsync(string serverUrl)
+    {
+        var attempt = await GetServerManifestOnceAsync(serverUrl);
+
+        if (!attempt.Intercepted)
+            return (attempt.Result, attempt.Error, attempt.ServerManifest);
+
+        var host = Uri.TryCreate(serverUrl, UriKind.Absolute, out var parsed) ? parsed.Host : null;
+
+        // Only worth a second attempt if the system resolver was still being trusted.
+        if (host is null || !DistrustSystemDns(host))
+            return (attempt.Result, attempt.Error, attempt.ServerManifest);
+
+        _logger.Warn("'{Host}' answered in a way that suggests interference; retrying through a public resolver.", host);
+
+        // The shared client keeps its connections, and one of them is already open to
+        // whatever answered last time - so the connect callback, and with it the new
+        // address, would never be consulted. A client of its own avoids that.
+        using var fresh = CreateHttpClient();
+
+        var retry = await GetServerManifestOnceAsync(serverUrl, fresh);
+
+        if (retry.Result == ManifestResult.Success)
+        {
+            _logger.Info("'{Host}' worked once the system resolver was bypassed.", host);
+
+            return (retry.Result, retry.Error, retry.ServerManifest);
+        }
+
+        // The retry did not help, so report the original failure rather than a confusing
+        // second one about a different address.
+        return (attempt.Result, attempt.Error, attempt.ServerManifest);
+    }
+
+    private static async Task<(ManifestResult Result, string Error, ServerManifest? ServerManifest, bool Intercepted)> GetServerManifestOnceAsync(string serverUrl, HttpClient? client = null)
     {
         var serverManifestUri = UriHelper.JoinUriPaths(serverUrl, ServerManifest.FileName.ToLower());
 
@@ -243,7 +347,7 @@ public static class HttpHelper
 
         try
         {
-            response = await _httpClient.GetAsync(serverManifestUri);
+            response = await (client ?? _httpClient).GetAsync(serverManifestUri);
         }
         catch (Exception ex)
         {
@@ -253,7 +357,11 @@ public static class HttpHelper
 
             _logger.Error(ex, "Could not reach '{Uri}'.", serverManifestUri);
 
-            return (ManifestResult.NetworkError, error, null);
+            // A certificate that does not match the host is the mark of something in
+            // the middle of the connection rather than of a server being down.
+            var intercepted = ex is AuthenticationException || ex.InnerException is AuthenticationException;
+
+            return (ManifestResult.NetworkError, error, null, intercepted);
         }
 
         if (!response.IsSuccessStatusCode)
@@ -265,19 +373,22 @@ public static class HttpHelper
 
             _logger.Error(error);
 
-            return (ManifestResult.HttpError, error, null);
+            return (ManifestResult.HttpError, error, null, false);
         }
 
         if (response.Content.Headers.ContentType?.MediaType is not (MediaTypeNames.Text.Xml or MediaTypeNames.Application.Xml))
         {
-            var error = $"""
-                         Failed to get server manifest, invalid format.
-                         Content Type: {response.Content.Headers.ContentType}
-                         """;
+            // Something answering with a web page instead of a manifest usually means the
+            // connection never arrived at the server at all.
+            var error = response.Content.Headers.ContentType?.MediaType is MediaTypeNames.Text.Html
+                ? $"{new Uri(serverManifestUri).Host} returned a web page instead of its manifest, which usually "
+                  + "means something on the network answered in its place. A different DNS server, or a VPN, "
+                  + "normally gets past this."
+                : $"Failed to get server manifest, invalid format. Content Type: {response.Content.Headers.ContentType}";
 
             _logger.Error(error);
 
-            return (ManifestResult.InvalidFormat, error, null);
+            return (ManifestResult.InvalidFormat, error, null, true);
         }
 
         using var contentStream = await response.Content.ReadAsStreamAsync();
@@ -293,7 +404,7 @@ public static class HttpHelper
 
                 _logger.Error(error);
 
-                return (ManifestResult.InvalidVersion, error, null);
+                return (ManifestResult.InvalidVersion, error, null, false);
             }
 
             if (version > ServerManifest.ManifestVersion)
@@ -306,7 +417,7 @@ public static class HttpHelper
 
                 _logger.Error(error);
 
-                return (ManifestResult.UnsupportedVersion, error, null);
+                return (ManifestResult.UnsupportedVersion, error, null, false);
             }
         }
         catch (Exception ex)
@@ -315,7 +426,7 @@ public static class HttpHelper
 
             _logger.Error(ex, error);
 
-            return (ManifestResult.InvalidVersion, error, null);
+            return (ManifestResult.InvalidVersion, error, null, false);
         }
 
         contentStream.Position = 0;
@@ -332,12 +443,12 @@ public static class HttpHelper
 
                 _logger.Error(error);
 
-                return (ManifestResult.DeserializeError, error, null);
+                return (ManifestResult.DeserializeError, error, null, false);
             }
 
             var serverManifest = ServerManifestV1.ToServerManifest(serverManifestV1);
 
-            return (ManifestResult.Success, string.Empty, serverManifest);
+            return (ManifestResult.Success, string.Empty, serverManifest, false);
         }
 
         // Current version
@@ -351,10 +462,10 @@ public static class HttpHelper
 
                 _logger.Error(error);
 
-                return (ManifestResult.DeserializeError, error, null);
+                return (ManifestResult.DeserializeError, error, null, false);
             }
 
-            return (ManifestResult.Success, string.Empty, serverManifest);
+            return (ManifestResult.Success, string.Empty, serverManifest, false);
         }
     }
 
