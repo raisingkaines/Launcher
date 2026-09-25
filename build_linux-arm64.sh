@@ -26,3 +26,19 @@ vpk pack --packTitle "Free Realms Legacy" --packAuthors "Raising Kaines" -u Free
 echo ""
 echo "Building Debian package (easy install for Linux and ChromeOS)"
 python3 "$SCRIPT_DIR/build-deb.py" "$BUILD_VERSION" "$PUBLISH_DIR" "$RELEASE_DIR" arm64
+
+echo ""
+echo "Building RPM (Fedora, RHEL, openSUSE)"
+python3 "$SCRIPT_DIR/build-rpm.py" "$BUILD_VERSION" "$PUBLISH_DIR" "$RELEASE_DIR" aarch64
+
+echo ""
+echo "Building pacman package (Arch, Manjaro)"
+python3 "$SCRIPT_DIR/build-arch.py" "$BUILD_VERSION" "$PUBLISH_DIR" "$RELEASE_DIR" aarch64
+
+echo ""
+echo "Building the generic tarball (every other distribution)"
+python3 "$SCRIPT_DIR/build-tarball.py" "$BUILD_VERSION" "$PUBLISH_DIR" "$RELEASE_DIR" aarch64
+
+echo ""
+echo "Checking the packages read back correctly"
+python3 "$SCRIPT_DIR/validate-linux-packages.py" "$RELEASE_DIR"

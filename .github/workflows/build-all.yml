@@ -96,6 +96,38 @@ jobs:
         run: ${{ matrix.script }} "${{ inputs.version }}"
         shell: cmd
 
+      - name: Verify Linux packages with native tools
+        if: startsWith(matrix.flavor, 'linux')
+        run: |
+          set -euo pipefail
+
+          # The hand-built packages are checked by validate-linux-packages.py during the
+          # build, but that is our own reader. This is the package managers' own verdict,
+          # which is the one that matters.
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rpm >/dev/null
+
+          for f in releases/*.rpm; do
+            echo "== $f"
+            rpm -qip "$f"
+            echo "-- files: $(rpm -qlp "$f" | wc -l)"
+            # Unsigned, so the signature line reads NOT OK; the digests must still pass.
+            rpm -K "$f" || true
+            rpm -Kv "$f" 2>&1 | grep -qi 'digests.*OK'               && echo "-- digests OK"               || { echo "::error::rpm digest check failed for $f"; exit 1; }
+          done
+
+          for f in releases/*.deb; do
+            echo "== $f"
+            dpkg-deb -I "$f"
+            echo "-- files: $(dpkg-deb -c "$f" | wc -l)"
+          done
+
+          for f in releases/*.pkg.tar.xz releases/*.tar.gz; do
+            [ -e "$f" ] || continue
+            echo "== $f"
+            tar -tf "$f" >/dev/null && echo "-- archive reads cleanly"
+          done
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
