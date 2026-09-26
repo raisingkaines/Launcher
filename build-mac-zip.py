@@ -64,6 +64,49 @@ def entry(name, mode, is_dir=False):
     return info
 
 
+READ_ME = """Free Realms Legacy - installing on a Mac
+
+Right click Install.command and choose Open. Then click Open again when macOS asks.
+
+That is it. It puts the launcher in your Applications folder, gets it past the download
+warning, and offers to set up Wine for the game.
+
+
+Why right click instead of double click
+
+macOS marks everything downloaded in a browser as quarantined, and will not open a
+quarantined app unless it was signed with a paid Apple developer certificate. This one is
+not, so macOS refuses it - and the message it shows says the app is damaged, which is
+misleading. The app is fine. Install.command clears that flag for you.
+
+Right clicking and choosing Open is what lets the script itself run. Double clicking it
+will not work the first time, for the same reason.
+
+
+If you would rather not run a script
+
+Drag FreeRealmsLegacyLauncher.app to your Applications folder, then open Terminal and run:
+
+    xattr -cr /Applications/FreeRealmsLegacyLauncher.app
+
+The app opens normally after that.
+
+
+Which Macs this runs on
+
+All of them. The launcher is Intel, and Apple Silicon Macs run it through Rosetta 2. If
+your Mac has never run an Intel app, macOS offers to install Rosetta the first time and
+takes a few seconds over it. Needs macOS 11 Big Sur or later.
+
+
+Playing the game
+
+The launcher runs on its own. The game client is a 32-bit Windows program, and macOS
+dropped 32-bit support, so it needs Wine built to handle that - Whisky is free and works,
+and CrossOver does too. Install.command offers to install Whisky if you have Homebrew.
+The launcher also checks when you press Play and says what is missing.
+"""
+
 def main():
     if not os.path.isdir(APP):
         print(f"  {APP} is missing - build the .app bundle first.")
@@ -98,6 +141,21 @@ def main():
                     z.writestr(entry(arc, mode), fh.read())
 
                 total += 1
+
+        # The setup script, and the one note worth reading before running it. A .command
+        # file is a plain script, which Gatekeeper will open after a right click even when
+        # it refuses to open an unsigned app at all - so this is the way in.
+        installer = os.path.join(ROOT, "mac", "Install.command")
+
+        if os.path.exists(installer):
+            with open(installer, "rb") as fh:
+                z.writestr(entry("Install.command", stat.S_IFREG | 0o755), fh.read())
+
+            executables.append("Install.command")
+            total += 1
+
+        z.writestr(entry("Read me first.txt", stat.S_IFREG | 0o644), READ_ME.encode())
+        total += 1
 
     print(f"  {os.path.basename(out)}")
     print(f"    {total} files, {os.path.getsize(out) / 1024 / 1024:.1f} MB")
