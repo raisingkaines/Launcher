@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 
 using Avalonia;
 using Avalonia.Logging;
@@ -28,6 +29,9 @@ internal sealed class Program
         VelopackApp.Build().Run();
 
         SetupNLog();
+
+        var version = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        LogManager.GetCurrentClassLogger().Info("Launcher starting. Build: {Version}.", version ?? "unknown");
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
@@ -74,7 +78,9 @@ internal sealed class Program
 
         var fileTarget = new FileTarget("file")
         {
-            DeleteOldFileOnStartup = true,
+            ArchiveOldFileOnStartup = true,
+            ArchiveFileName = Path.Combine(logsDir, "Launcher.previous.log"),
+            MaxArchiveFiles = 3,
             FileName = Path.Combine(logsDir, Constants.LogFile)
         };
 

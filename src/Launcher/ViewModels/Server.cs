@@ -15,8 +15,6 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using Downloader;
-
 using HashDepot;
 
 using Launcher.Helpers;
@@ -537,7 +535,7 @@ public partial class Server : ObservableObject
 
         IsDownloading = true;
 
-        var failedFiles = new ConcurrentBag<string>();
+        var failedFiles = new ConcurrentQueue<(string Name, string Error)>();
 
         try
         {
@@ -553,46 +551,23 @@ public partial class Server : ObservableObject
                     MaxDegreeOfParallelism = numParallelDownloads
                 };
 
-                var servicePool = new ConcurrentBag<DownloadService>();
-
-                for (var i = 0; i < numParallelDownloads; i++)
-                    servicePool.Add(new DownloadService(CreateDownloadConfiguration()));
-
-                try
+                await Parallel.ForEachAsync(filesToDownload, parallelOptions, async (file, ct) =>
                 {
-                    await Parallel.ForEachAsync(filesToDownload, parallelOptions, async (file, ct) =>
-                    {
-                        servicePool.TryTake(out var downloadService); // guaranteed non-null
+                    var error = await DownloadFileAsync(file, ct);
+                    if (error is not null)
+                        failedFiles.Enqueue((file.Name, error));
 
-                        try
-                        {
-                            if (!await DownloadFileAsync(downloadService!, file.Path, file.Name))
-                                failedFiles.Add(file.Name);
-                        }
-                        finally
-                        {
-                            servicePool.Add(downloadService!);
-                        }
-
-                        filesDownloaded = Interlocked.Increment(ref filesDownloaded);
-
-                        StatusMessage = App.GetText("Text.Server.PreparingGameFiles", filesDownloaded, filesToDownload.Count);
-                    });
-                }
-                finally
-                {
-                    foreach (var downloadService in servicePool)
-                        downloadService.Dispose();
-                }
+                    var completedCount = Interlocked.Increment(ref filesDownloaded);
+                    StatusMessage = App.GetText("Text.Server.PreparingGameFiles", completedCount, filesToDownload.Count);
+                });
             }
             else
             {
-                using var downloadService = new DownloadService(CreateDownloadConfiguration());
-
                 foreach (var file in filesToDownload)
                 {
-                    if (!await DownloadFileAsync(downloadService, file.Path, file.Name))
-                        failedFiles.Add(file.Name);
+                    var error = await DownloadFileAsync(file);
+                    if (error is not null)
+                        failedFiles.Enqueue((file.Name, error));
 
                     filesDownloaded++;
 
@@ -611,10 +586,15 @@ public partial class Server : ObservableObject
             var message = new StringBuilder();
 
             message.AppendLine($"Failed to download {failedFiles.Count} file(s):");
-            message.AppendLine(string.Join("\n", failedFiles.Take(10)));
+            message.AppendLine(string.Join("\n", failedFiles.Take(10).Select(file => file.Name)));
 
             if (failedFiles.Count > 10)
                 message.AppendLine($"...And {failedFiles.Count - 10} more.");
+
+            if (failedFiles.TryPeek(out var firstFailure))
+                message.AppendLine($"First error: {firstFailure.Error}");
+
+            message.AppendLine("Use Open Logs for the full error details.");
 
             App.AddNotification(message.ToString(), true);
         }
@@ -624,50 +604,30 @@ public partial class Server : ObservableObject
         return failedFiles.IsEmpty;
     }
 
-    private static DownloadConfiguration CreateDownloadConfiguration() => new()
-    {
-        CustomHttpClientFactory = () => HttpHelper.DownloadHttpClient,
-        MaxTryAgainOnFailure = 5,
-
-        // Parallelism happens per-file
-        ChunkCount = 1,
-        ParallelDownload = false,
-    };
-
-    private async Task<bool> DownloadFileAsync(DownloadService downloadService, string path, string fileName)
+    private async Task<string?> DownloadFileAsync(LocalFile file, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(Info.Url))
-            return false;
+            return "The server download address is missing.";
 
-        var downloadFilePath = Path.Combine(path, fileName);
+        var downloadFilePath = Path.Combine(file.Path, file.Name);
 
         try
         {
-            var clientFileUri = UriHelper.JoinUriPaths(Info.Url, "client", path, fileName);
-            var fileDirectory = Path.Combine(InstallPaths.GetClientPath(Info), path);
-            var filePath = Path.Combine(fileDirectory, fileName);
+            var clientFileUri = UriHelper.JoinUriPaths(Info.Url, "client", file.Path, file.Name);
+            var filePath = Path.Combine(InstallPaths.GetClientPath(Info), file.Path, file.Name);
+            await ClientFileDownloader.DownloadAsync(HttpHelper.DownloadHttpClient, clientFileUri,
+                filePath, file.Size, file.Hash, cancellationToken);
 
-            Directory.CreateDirectory(fileDirectory);
-
-            await using var fileStream = await downloadService.DownloadFileTaskAsync(clientFileUri);
-
-            if (fileStream is null || fileStream.Length == 0)
-            {
-                _logger.Error("Failed to get client file or received empty stream: {Path}.", downloadFilePath);
-                return false;
-            }
-
-            await using var writeStream = File.Create(filePath);
-
-            await fileStream.CopyToAsync(writeStream);
-
-            return true;
+            return null;
         }
         catch (Exception ex)
         {
             _logger.Error(ex, "Error downloading: {Path}.", downloadFilePath);
 
-            return false;
+            var reason = ex.GetBaseException().Message.Replace('\r', ' ').Replace('\n', ' ');
+            if (reason.Length > 220)
+                reason = reason[..217] + "...";
+            return $"{downloadFilePath}: {reason}";
         }
     }
 
@@ -717,7 +677,9 @@ public partial class Server : ObservableObject
             results.Add(new LocalFile
             {
                 Path = path,
-                Name = file.Name
+                Name = file.Name,
+                Size = file.Size,
+                Hash = file.Hash
             });
         }
 
