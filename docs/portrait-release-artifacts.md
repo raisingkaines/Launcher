@@ -46,13 +46,11 @@ requirement of a `workflow_dispatch`-only workflow.
 
 The public release API and update feed showed only 1.1.5, package ID
 `FreeRealmsLegacyLauncher`, channel `win`, and Windows artifacts. The workflow
-currently stages candidate 1.1.6. Authenticated draft metadata was not available
-to this audit without accessing stored credentials and was not queried. Check
-draft/tag availability before publication. Separately, the old manual Mac ZIP
-helper defaults to 1.3.0; whether that build was distributed is unverified here.
-If existing Mac installs report 1.3.0, choose a version above it (for example
-1.3.1) before building. Changing only a GitHub release title does not change the
-package version.
+stages candidate 1.3.1. Root's authenticated metadata-only audit found no other
+releases, drafts or tags. The old manual Mac ZIP helper defaults to 1.3.0;
+whether that build was distributed is unverified. Version 1.3.1 exceeds both
+known version labels and preserves upgrade ordering for either distribution.
+Changing only a GitHub release title does not change the package version.
 
 When publishing, bind the release tag to the exact reviewed source revision from
 the artifact receipts. The older `build-all.yml` release command lacks an
