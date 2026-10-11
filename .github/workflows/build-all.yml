@@ -39,6 +39,8 @@ jobs:
           - flavor: win-arm64
             os: windows-latest
             script: build_win-arm64.bat
+    env:
+      HAS_MACOS_CERT: ${{ secrets.MACOS_CERT_P12 != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -52,7 +54,7 @@ jobs:
         run: dotnet tool install -g vpk
 
       - name: Set up macOS signing
-        if: runner.os == 'macOS' && secrets.MACOS_CERT_P12 != ''
+        if: runner.os == 'macOS' && env.HAS_MACOS_CERT == 'true'
         env:
           MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
           MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}

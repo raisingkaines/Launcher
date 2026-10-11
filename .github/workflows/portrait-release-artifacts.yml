@@ -1,0 +1,163 @@
+name: Portrait Launcher Release Artifacts
+
+on:
+  push:
+    branches: [fix/legacy-live-portraits-20261011]
+
+# Artifact review only. Publishing remains a separate operator action.
+permissions:
+  contents: read
+
+concurrency:
+  group: portrait-release-artifacts-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RELEASE_VERSION: '1.1.6'
+
+jobs:
+  build:
+    name: Build ${{ matrix.flavor }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: win-x64
+            os: windows-2025
+            architecture: X64
+            channel: win
+          - flavor: osx-x64
+            os: macos-15-intel
+            architecture: X64
+            channel: osx
+          - flavor: osx-arm64
+            os: macos-15
+            architecture: ARM64
+            channel: osx-arm64
+    env:
+      HAS_MACOS_CERT: ${{ secrets.MACOS_CERT_P12 != '' }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: src/global.json
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Verify runner and source
+        env:
+          EXPECTED_ARCH: ${{ matrix.architecture }}
+        run: |
+          if ($env:RUNNER_ARCH -ne $env:EXPECTED_ARCH) { throw 'Unexpected runner architecture.' }
+          git rev-parse HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot read source revision.' }
+          if (!(Test-Path -LiteralPath 'tests/Launcher.Portraits.Tests/Launcher.Portraits.Tests.csproj')) {
+            throw 'The reviewed portrait implementation and tests must be included before building.'
+          }
+
+      - name: Verify launcher behavior
+        run: |
+          python -m unittest discover -s tools -p test_verify_release_artifacts.py -v
+          if ($LASTEXITCODE -ne 0) { throw 'Artifact verifier tests failed.' }
+          foreach ($project in @('Launcher.Download.Tests', 'Launcher.Wine.Tests', 'Launcher.Portraits.Tests')) {
+            dotnet run --project "tests/$project/$project.csproj" --configuration Release
+            if ($LASTEXITCODE -ne 0) { throw "$project failed." }
+          }
+
+      - name: Install matching Velopack CLI
+        run: |
+          dotnet tool install --global vpk --version 1.2.0
+          if ($LASTEXITCODE -ne 0) { throw 'Velopack installation failed.' }
+
+      - name: Set up optional macOS signing
+        if: runner.os == 'macOS' && env.HAS_MACOS_CERT == 'true'
+        shell: bash
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+          MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+          MACOS_NOTARY_PROFILE: ${{ secrets.MACOS_NOTARY_PROFILE }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/portrait-signing.keychain-db"
+          security create-keychain -p "" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "" "$KEYCHAIN"
+          printf '%s' "$MACOS_CERT_P12" | base64 --decode > "$RUNNER_TEMP/portrait-cert.p12"
+          security import "$RUNNER_TEMP/portrait-cert.p12" -k "$KEYCHAIN" -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/portrait-cert.p12"
+          security set-key-partition-list -S apple-tool:,apple: -k "" "$KEYCHAIN" >/dev/null
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain-db
+          if [ -n "${MACOS_NOTARY_PROFILE:-}" ]; then
+            xcrun notarytool store-credentials "$MACOS_NOTARY_PROFILE" --apple-id "$MACOS_NOTARY_APPLE_ID" --team-id "$MACOS_NOTARY_TEAM_ID" --password "$MACOS_NOTARY_PASSWORD" --keychain "$KEYCHAIN"
+          fi
+
+      - name: Build Windows package
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: build_win-x64.bat %RELEASE_VERSION%
+
+      - name: Build macOS package
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          FLAVOR: ${{ matrix.flavor }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          MACOS_INSTALL_IDENTITY: ${{ secrets.MACOS_INSTALL_IDENTITY }}
+          MACOS_NOTARY_PROFILE: ${{ secrets.MACOS_NOTARY_PROFILE }}
+        run: |
+          set -euo pipefail
+          chmod +x "build_${FLAVOR}.sh"
+          "./build_${FLAVOR}.sh" "$RELEASE_VERSION"
+
+      - name: Verify macOS bundle signatures and disk image
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERIFY_DIR="$RUNNER_TEMP/portrait-bundle-verify"
+          mkdir -p "$VERIFY_DIR"
+          ZIP="$(find releases -maxdepth 1 -name '*Portable.zip' -print -quit)"
+          test -n "$ZIP"
+          ditto -x -k "$ZIP" "$VERIFY_DIR"
+          APP="$(find "$VERIFY_DIR" -maxdepth 2 -name '*.app' -print -quit)"
+          test -n "$APP"
+          codesign --verify --deep --strict "$APP"
+          hdiutil verify "releases/FreeRealmsLegacyLauncher-$RELEASE_VERSION.dmg"
+
+      - name: Verify package feed and record artifact hashes
+        env:
+          FLAVOR: ${{ matrix.flavor }}
+          CHANNEL: ${{ matrix.channel }}
+        run: |
+          python tools/verify-release-artifacts.py releases $env:RELEASE_VERSION $env:CHANNEL $env:FLAVOR $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Artifact validation failed.' }
+
+      - name: Upload reviewed-build candidates
+        uses: actions/upload-artifact@v7
+        with:
+          name: FreeRealmsLegacyLauncher-${{ env.RELEASE_VERSION }}-${{ matrix.flavor }}-${{ github.sha }}
+          path: releases/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove temporary signing material
+        if: always() && runner.os == 'macOS'
+        shell: bash
+        run: |
+          rm -f "$RUNNER_TEMP/portrait-cert.p12"
+          if [ -f "$RUNNER_TEMP/portrait-signing.keychain-db" ]; then
+            security delete-keychain "$RUNNER_TEMP/portrait-signing.keychain-db"
+          fi
