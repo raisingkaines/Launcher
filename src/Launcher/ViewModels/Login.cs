@@ -290,6 +290,7 @@ public partial class Login : Popup
         // Platform-specific process startup logic
         string fileName;
         string processArguments;
+        var usesWine = false;
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
@@ -309,6 +310,7 @@ public partial class Login : Popup
 
             fileName = winePath;
             processArguments = $"{Constants.ClientExecutableName} {arguments}";
+            usesWine = true;
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -327,14 +329,17 @@ public partial class Login : Popup
         _server.Process.StartInfo.FileName = fileName;
         _server.Process.StartInfo.Arguments = processArguments;
         _server.Process.StartInfo.UseShellExecute = true;
+        _server.WineDiagnostics = usesWine
+            ? new WineProcessDiagnostics(_server.Process, sessionId, launch?.Ticket)
+            : null;
         _server.Process.EnableRaisingEvents = true;
         _server.Process.Exited += _server.ClientProcessExited;
 
         try
         {
-            _server.Process.Start();
-
             _server.NoteClientLaunched();
+            _server.Process.Start();
+            _server.WineDiagnostics?.StartReading();
         }
         catch (Exception ex)
         {
@@ -344,6 +349,7 @@ public partial class Login : Popup
 
             _server.Process?.Dispose();
             _server.Process = null;
+            _server.WineDiagnostics = null;
         }
     }
 

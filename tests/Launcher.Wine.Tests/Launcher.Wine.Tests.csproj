@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="6.1.3" />
+    <Compile Include="../../src/Launcher/Helpers/WineProcessDiagnostics.cs" Link="WineProcessDiagnostics.cs" />
+    <Compile Include="../../src/Launcher/Helpers/CrashReportHelper.cs" Link="CrashReportHelper.cs" />
+  </ItemGroup>
+</Project>

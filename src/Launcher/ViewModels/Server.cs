@@ -199,16 +199,22 @@ public partial class Server : ObservableObject
     /// </summary>
     private DateTime _launchedAt;
 
+    public WineProcessDiagnostics? WineDiagnostics { get; set; }
+
     public void NoteClientLaunched() => _launchedAt = DateTime.UtcNow;
 
-    public void ClientProcessExited(object? sender, EventArgs e)
+    public async void ClientProcessExited(object? sender, EventArgs e)
     {
+        var exitedProcess = sender as Process;
+        if (exitedProcess is null || !ReferenceEquals(exitedProcess, Process))
+            return;
+        var diagnostics = WineDiagnostics;
         // Read the exit code before disposing, and remember when it started.
         int? exitCode = null;
 
         try
         {
-            exitCode = Process?.ExitCode;
+            exitCode = exitedProcess.ExitCode;
         }
         catch (Exception ex)
         {
@@ -217,14 +223,18 @@ public partial class Server : ObservableObject
 
         var ranFor = _launchedAt == default ? TimeSpan.Zero : DateTime.UtcNow - _launchedAt;
 
-        Process?.Dispose();
+        var wineReport = diagnostics is null ? null : await diagnostics.CompleteAsync();
+        exitedProcess.Dispose();
 
         // Exited is raised on a thread pool thread; everything below touches the UI.
         Dispatcher.UIThread.Post(() =>
         {
+            if (!ReferenceEquals(exitedProcess, Process))
+                return;
             Process = null;
+            WineDiagnostics = null;
 
-            ReportIfClosedBadly(exitCode, ranFor);
+            ReportIfClosedBadly(exitCode, ranFor, wineReport);
         });
     }
 
@@ -232,7 +242,7 @@ public partial class Server : ObservableObject
     /// A non-zero exit means the game fell over. A clean exit in the first few seconds
     /// means it never finished loading - to the player both just look like it died.
     /// </summary>
-    private void ReportIfClosedBadly(int? exitCode, TimeSpan ranFor)
+    private void ReportIfClosedBadly(int? exitCode, TimeSpan ranFor, string? wineReport)
     {
         var crashed = exitCode is not null and not 0;
         var endedEarly = exitCode == 0 && ranFor > TimeSpan.Zero && ranFor < CrashReportHelper.ShortSessionThreshold;
@@ -243,7 +253,7 @@ public partial class Server : ObservableObject
         _logger.Warn("Client for {Name} exited with code {ExitCode} after {Seconds:0.#}s.",
             Info.Name, exitCode, ranFor.TotalSeconds);
 
-        App.ShowPopup(new CrashReport(Info, exitCode, ranFor, endedEarly));
+        App.ShowPopup(new CrashReport(Info, exitCode, ranFor, endedEarly, wineReport));
     }
 
     [RelayCommand]

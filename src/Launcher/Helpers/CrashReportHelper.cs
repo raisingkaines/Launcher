@@ -37,7 +37,7 @@ public static class CrashReportHelper
     public static string GetClientLogsPath(ServerInfo info)
         => Path.Combine(InstallPaths.GetClientPath(info), ClientLogsDirectory);
 
-    public static string Build(ServerInfo info, int? exitCode, TimeSpan ranFor)
+    public static string Build(ServerInfo info, int? exitCode, TimeSpan ranFor, string? wineReport = null)
     {
         var report = new StringBuilder();
 
@@ -46,6 +46,13 @@ public static class CrashReportHelper
         report.AppendLine($"Ran for:   {DescribeDuration(ranFor)}");
         report.AppendLine($"Client:    {InstallPaths.GetClientPath(info)}");
         report.AppendLine();
+
+        // Include Wine failures even when the native client never created a log.
+        if (!string.IsNullOrWhiteSpace(wineReport))
+        {
+            report.AppendLine(wineReport);
+            report.AppendLine();
+        }
 
         var logPath = Path.Combine(GetClientLogsPath(info), ClientLogFile);
 

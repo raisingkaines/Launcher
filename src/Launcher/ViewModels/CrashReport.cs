@@ -31,7 +31,7 @@ public partial class CrashReport : Popup
     [ObservableProperty]
     private string details = string.Empty;
 
-    public CrashReport(ServerInfo info, int? exitCode, TimeSpan ranFor, bool endedEarly)
+    public CrashReport(ServerInfo info, int? exitCode, TimeSpan ranFor, bool endedEarly, string? wineReport = null)
     {
         _info = info;
 
@@ -39,7 +39,7 @@ public partial class CrashReport : Popup
             ? App.GetText("Text.Crash.EndedEarly")
             : App.GetText("Text.Crash.Crashed");
 
-        Details = CrashReportHelper.Build(info, exitCode, ranFor);
+        Details = CrashReportHelper.Build(info, exitCode, ranFor, wineReport);
 
         View = new Views.CrashReport
         {
