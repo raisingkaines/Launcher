@@ -95,14 +95,27 @@ await Run("CancelledDuringTransferPreservesExisting", async directory => {
     Check(error is OperationCanceledException, "In-flight cancellation not preserved: " + error);
     Check((await File.ReadAllBytesAsync(path)).SequenceEqual(original), "In-flight cancellation overwrote existing file");
 });
-await Run("LockedDestinationPreservesExisting", async directory => {
+await Run("OpenDestinationUsesPlatformRenameSemantics", async directory => {
     string path = Path.Combine(directory,"client.bin"); await File.WriteAllBytesAsync(path,original);
     using (var locked = new FileStream(path,FileMode.Open,FileAccess.ReadWrite,FileShare.None))
     {
-        var error = await Reject(() => Download("ok",955,path));
-        Check(error is IOException or UnauthorizedAccessException, "Locked destination did not surface a disk error");
+        if (OperatingSystem.IsWindows())
+        {
+            var error = await Reject(() => Download("ok",955,path));
+            Check(error is IOException or UnauthorizedAccessException, "Locked destination did not surface a disk error");
+        }
+        else
+        {
+            // Unix rename replaces the directory entry while the old open inode remains readable.
+            await Download("ok",955,path);
+            Check((await File.ReadAllBytesAsync(path)).SequenceEqual(Bytes(955)), "Replacement differs from verified bytes");
+            using var retained = new MemoryStream();
+            await locked.CopyToAsync(retained);
+            Check(retained.ToArray().SequenceEqual(original), "Open original inode changed during replacement");
+        }
     }
-    Check((await File.ReadAllBytesAsync(path)).SequenceEqual(original), "Locked destination contents changed");
+    if (OperatingSystem.IsWindows())
+        Check((await File.ReadAllBytesAsync(path)).SequenceEqual(original), "Locked destination contents changed");
 });
 await Run("ZeroByteManifestFile", async directory => {
     string path = Path.Combine(directory,"client.bin"); await File.WriteAllBytesAsync(path,original);
