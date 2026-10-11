@@ -187,10 +187,6 @@ public partial class Login : Popup
             return;
         }
 
-        // The client captured these on previous logins and never sent them. Do it in the
-        // background: a portrait is not worth making the player wait.
-        _ = Task.Run(() => PortraitSync.SyncAsync(_server.Info, loginResponse.SessionId, characters));
-
         var characterSelect = new CharacterSelect(
             _server,
             loginResponse.SessionId,
@@ -334,12 +330,19 @@ public partial class Login : Popup
             : null;
         _server.Process.EnableRaisingEvents = true;
         _server.Process.Exited += _server.ClientProcessExited;
+        _server.PortraitSync?.Dispose();
+        var portraitApiUrl = _server.Info.WebApiUrl;
+        _server.PortraitSync = new PortraitSyncSession(
+            Path.Combine(workingDirectory, "Resources", "Images", "heads"),
+            (guid, png, token) => CharacterApi.TryUploadPortraitBytesAsync(
+                portraitApiUrl, sessionId, guid, png, token));
 
         try
         {
             _server.NoteClientLaunched();
             _server.Process.Start();
             _server.WineDiagnostics?.StartReading();
+            _server.PortraitSync?.Start();
         }
         catch (Exception ex)
         {
@@ -350,6 +353,8 @@ public partial class Login : Popup
             _server.Process?.Dispose();
             _server.Process = null;
             _server.WineDiagnostics = null;
+            _server.PortraitSync?.Dispose();
+            _server.PortraitSync = null;
         }
     }
 

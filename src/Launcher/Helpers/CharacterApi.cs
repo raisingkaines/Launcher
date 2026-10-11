@@ -252,6 +252,24 @@ public static class CharacterApi
             if (png.Length == 0)
                 return false;
 
+            return await TryUploadPortraitBytesAsync(webApiUrl, sessionId, guid, png, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, "Could not upload a portrait to '{Url}'.", webApiUrl);
+            return false;
+        }
+    }
+
+    public static async Task<bool> TryUploadPortraitBytesAsync(
+        string webApiUrl, string sessionId, string guid, byte[] png,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!TryBuildUri(webApiUrl, $"characters/{Uri.EscapeDataString(guid)}/portrait", out var uri))
+                return false;
+
             using var content = new ByteArrayContent(png);
             content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
 

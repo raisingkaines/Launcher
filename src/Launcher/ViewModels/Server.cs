@@ -200,6 +200,7 @@ public partial class Server : ObservableObject
     private DateTime _launchedAt;
 
     public WineProcessDiagnostics? WineDiagnostics { get; set; }
+    public PortraitSyncSession? PortraitSync { get; set; }
 
     public void NoteClientLaunched() => _launchedAt = DateTime.UtcNow;
 
@@ -209,6 +210,7 @@ public partial class Server : ObservableObject
         if (exitedProcess is null || !ReferenceEquals(exitedProcess, Process))
             return;
         var diagnostics = WineDiagnostics;
+        PortraitSync?.Dispose();
         // Read the exit code before disposing, and remember when it started.
         int? exitCode = null;
 
@@ -233,6 +235,7 @@ public partial class Server : ObservableObject
                 return;
             Process = null;
             WineDiagnostics = null;
+            PortraitSync = null;
 
             ReportIfClosedBadly(exitCode, ranFor, wineReport);
         });
